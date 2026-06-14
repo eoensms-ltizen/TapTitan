@@ -1,6 +1,16 @@
-import type { HeroDefinition, HeroId, MonsterVariant, SkillDefinition, SkillId } from "./types";
+import type {
+  BossPowerDefinition,
+  BossPowerId,
+  HeroDefinition,
+  HeroId,
+  MonsterVariant,
+  PrestigeUpgradeDefinition,
+  PrestigeUpgradeId,
+  SkillDefinition,
+  SkillId,
+} from "./types";
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 export const SAVE_KEY = "tap-titan-mvp-save-v1";
 
 export const BASE_TAP_DAMAGE = 4;
@@ -15,6 +25,10 @@ export const SAVE_INTERVAL_MS = 7_000;
 export const OFFLINE_CAP_SECONDS = 6 * 60 * 60;
 export const MIN_PRESTIGE_STAGE = 15;
 export const PRESTIGE_DAMAGE_PER_SHARD = 0.08;
+export const PRESTIGE_TAP_DAMAGE_PER_LEVEL = 0.1;
+export const PRESTIGE_HERO_DPS_PER_LEVEL = 0.08;
+export const PRESTIGE_GOLD_PER_LEVEL = 0.1;
+export const PRESTIGE_BOSS_TIME_PER_LEVEL_MS = 1_500;
 export const CRIT_CHANCE = 0.08;
 export const CRIT_MULTIPLIER = 2.25;
 
@@ -126,6 +140,109 @@ export const SKILL_BY_ID = SKILLS.reduce(
     return lookup;
   },
   {} as Record<SkillId, SkillDefinition>,
+);
+
+export const PRESTIGE_UPGRADES: PrestigeUpgradeDefinition[] = [
+  {
+    id: "ancient_edge",
+    name: "Ancient Edge",
+    role: "Permanent tap damage",
+    baseCost: 1,
+    costGrowth: 1.55,
+    maxLevel: 25,
+    accent: "#fb7185",
+  },
+  {
+    id: "guild_oath",
+    name: "Guild Oath",
+    role: "Permanent hero DPS",
+    baseCost: 1,
+    costGrowth: 1.6,
+    maxLevel: 25,
+    accent: "#6ee7b7",
+  },
+  {
+    id: "fortune_seal",
+    name: "Fortune Seal",
+    role: "Permanent gold gain",
+    baseCost: 2,
+    costGrowth: 1.7,
+    maxLevel: 20,
+    accent: "#facc15",
+  },
+  {
+    id: "chrono_brand",
+    name: "Chrono Brand",
+    role: "Longer boss timer",
+    baseCost: 2,
+    costGrowth: 1.85,
+    maxLevel: 15,
+    accent: "#38bdf8",
+  },
+];
+
+export const PRESTIGE_UPGRADE_BY_ID = PRESTIGE_UPGRADES.reduce(
+  (lookup, upgrade) => {
+    lookup[upgrade.id] = upgrade;
+    return lookup;
+  },
+  {} as Record<PrestigeUpgradeId, PrestigeUpgradeDefinition>,
+);
+
+export const BOSS_POWERS: BossPowerDefinition[] = [
+  {
+    id: "ember_rage",
+    name: "Ember Rage",
+    role: "High HP, rich bounty",
+    accent: "#fb923c",
+    hpMultiplier: 1.12,
+    goldMultiplier: 1.18,
+    timeMultiplier: 1,
+  },
+  {
+    id: "bone_guard",
+    name: "Bone Guard",
+    role: "Armored titan",
+    accent: "#e7e5e4",
+    hpMultiplier: 1.25,
+    goldMultiplier: 1.1,
+    timeMultiplier: 1.06,
+  },
+  {
+    id: "mire_regen",
+    name: "Mire Regen",
+    role: "Sustained endurance",
+    accent: "#a3e635",
+    hpMultiplier: 1.16,
+    goldMultiplier: 1.16,
+    timeMultiplier: 0.96,
+  },
+  {
+    id: "crystal_barrier",
+    name: "Crystal Barrier",
+    role: "Long timer, heavy shell",
+    accent: "#93c5fd",
+    hpMultiplier: 1.32,
+    goldMultiplier: 1.24,
+    timeMultiplier: 1.12,
+  },
+  {
+    id: "rift_haste",
+    name: "Rift Haste",
+    role: "Short timer, high payout",
+    accent: "#d8b4fe",
+    hpMultiplier: 0.94,
+    goldMultiplier: 1.35,
+    timeMultiplier: 0.82,
+  },
+];
+
+export const BOSS_POWER_BY_ID = BOSS_POWERS.reduce(
+  (lookup, power) => {
+    lookup[power.id] = power;
+    return lookup;
+  },
+  {} as Record<BossPowerId, BossPowerDefinition>,
 );
 
 export const MONSTER_VARIANTS: Record<

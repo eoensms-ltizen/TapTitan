@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import {
-  BOSS_TIME_LIMIT_MS,
   HEROES,
   MIN_PRESTIGE_STAGE,
   MONSTERS_PER_STAGE,
+  PRESTIGE_UPGRADE_BY_ID,
   SAVE_INTERVAL_MS,
   SKILLS,
   SKILL_BY_ID,
@@ -11,8 +11,11 @@ import {
 import {
   applyCritical,
   createMonster,
+  getBossTimeLimitForStage,
   getHeroUpgradeCost,
   getPlayerUpgradeCost,
+  getPrestigeUpgradeCost,
+  getPrestigeUpgradeMultipliers,
   getPrestigeReward,
   getSkillCooldownMs,
   getSkillMultipliers,
@@ -23,7 +26,7 @@ import {
   shouldCrit,
 } from "./formulas";
 import { clearSnapshot, createDefaultSnapshot, loadSnapshot, saveSnapshot } from "./persistence";
-import type { CombatReport, GameSnapshot, HeroId, SkillId } from "./types";
+import type { CombatReport, GameSettings, GameSnapshot, HeroId, PrestigeUpgradeId, SkillId } from "./types";
 
 interface GameActions {
   tapMonster: () => CombatReport | null;
@@ -32,6 +35,8 @@ interface GameActions {
   upgradeHero: (heroId: HeroId) => boolean;
   upgradeSkill: (skillId: SkillId) => boolean;
   activateSkill: (skillId: SkillId) => boolean;
+  upgradePrestige: (upgradeId: PrestigeUpgradeId) => boolean;
+  updateSettings: (settings: Partial<GameSettings>) => void;
   retryBoss: () => void;
   prestige: () => boolean;
   manualSave: () => void;
@@ -50,12 +55,20 @@ function nextMonster(
   isBoss: boolean,
   now: number,
 ) {
-  return createMonster(snapshot.nextMonsterId, stage, killsInStage, isBoss, now);
+  return createMonster(
+    snapshot.nextMonsterId,
+    stage,
+    killsInStage,
+    isBoss,
+    now,
+    getBossTimeLimitForStage(snapshot, stage),
+  );
 }
 
 function completeKill(snapshot: GameSnapshot, now: number): Partial<GameSnapshot> {
   const multipliers = getSkillMultipliers(snapshot, now);
-  const reward = Math.floor(snapshot.monster.goldReward * multipliers.gold);
+  const prestigeMultipliers = getPrestigeUpgradeMultipliers(snapshot);
+  const reward = Math.floor(snapshot.monster.goldReward * multipliers.gold * prestigeMultipliers.gold);
   let stage = snapshot.stage;
   let highestStage = snapshot.highestStage;
   let killsInStage = snapshot.killsInStage;
@@ -292,6 +305,43 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return true;
   },
 
+  upgradePrestige: (upgradeId) => {
+    const snapshot = get();
+    const definition = PRESTIGE_UPGRADE_BY_ID[upgradeId];
+    if (!definition) {
+      return false;
+    }
+
+    const level = snapshot.prestigeUpgrades[upgradeId];
+    if (level >= definition.maxLevel) {
+      return false;
+    }
+
+    const cost = getPrestigeUpgradeCost(upgradeId, level);
+    if (snapshot.prestigeShards < cost) {
+      return false;
+    }
+
+    set({
+      prestigeShards: snapshot.prestigeShards - cost,
+      prestigeUpgrades: {
+        ...snapshot.prestigeUpgrades,
+        [upgradeId]: level + 1,
+      },
+    });
+    return true;
+  },
+
+  updateSettings: (settings) => {
+    const snapshot = get();
+    const nextSettings = {
+      ...snapshot.settings,
+      ...settings,
+    };
+    set({ settings: nextSettings });
+    saveSnapshot({ ...snapshot, settings: nextSettings }, Date.now());
+  },
+
   retryBoss: () => {
     const now = Date.now();
     const snapshot = get();
@@ -303,7 +353,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
       bossFailed: false,
       bossAttempts: snapshot.bossAttempts + 1,
       nextMonsterId: snapshot.nextMonsterId + 1,
-      monster: createMonster(snapshot.nextMonsterId, snapshot.stage, 0, true, now),
+      monster: createMonster(
+        snapshot.nextMonsterId,
+        snapshot.stage,
+        0,
+        true,
+        now,
+        getBossTimeLimitForStage(snapshot, snapshot.stage),
+      ),
     });
   },
 
@@ -319,8 +376,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       ...reset,
       prestigeShards: snapshot.prestigeShards + reward,
+      lifetimePrestigeShards: snapshot.lifetimePrestigeShards + reward,
+      prestigeUpgrades: snapshot.prestigeUpgrades,
       prestigeCount: snapshot.prestigeCount + 1,
       lifetimeGold: snapshot.lifetimeGold,
+      settings: snapshot.settings,
       lastSavedAt: now,
     });
     saveSnapshot(get(), now);
@@ -357,5 +417,6 @@ export function getBossTimeProgress(snapshot: GameSnapshot, now: number): number
     return 0;
   }
 
-  return Math.max(0, Math.min(1, (snapshot.monster.bossDeadline - now) / BOSS_TIME_LIMIT_MS));
+  const total = Math.max(1, snapshot.monster.bossDeadline - snapshot.monster.spawnedAt);
+  return Math.max(0, Math.min(1, (snapshot.monster.bossDeadline - now) / total));
 }

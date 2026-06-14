@@ -7,6 +7,10 @@ export type HeroId =
 
 export type SkillId = "titan_surge" | "gold_pact" | "boss_breaker";
 
+export type PrestigeUpgradeId = "ancient_edge" | "guild_oath" | "fortune_seal" | "chrono_brand";
+
+export type BossPowerId = "ember_rage" | "bone_guard" | "mire_regen" | "crystal_barrier" | "rift_haste";
+
 export type MonsterVariant =
   | "ash_imp"
   | "bone_knight"
@@ -21,6 +25,7 @@ export interface Monster {
   stage: number;
   index: number;
   isBoss: boolean;
+  bossPower: BossPowerId | null;
   maxHp: number;
   hp: number;
   goldReward: number;
@@ -58,6 +63,31 @@ export interface SkillRuntime {
   cooldownUntil: number;
 }
 
+export interface PrestigeUpgradeDefinition {
+  id: PrestigeUpgradeId;
+  name: string;
+  role: string;
+  baseCost: number;
+  costGrowth: number;
+  maxLevel: number;
+  accent: string;
+}
+
+export interface BossPowerDefinition {
+  id: BossPowerId;
+  name: string;
+  role: string;
+  accent: string;
+  hpMultiplier: number;
+  goldMultiplier: number;
+  timeMultiplier: number;
+}
+
+export interface GameSettings {
+  soundEnabled: boolean;
+  hapticsEnabled: boolean;
+}
+
 export interface OfflineReport {
   gold: number;
   seconds: number;
@@ -85,6 +115,8 @@ export interface GameSnapshot {
   bossAttempts: number;
   monster: Monster;
   prestigeShards: number;
+  lifetimePrestigeShards: number;
+  prestigeUpgrades: Record<PrestigeUpgradeId, number>;
   prestigeCount: number;
   totalTaps: number;
   totalKills: number;
@@ -92,4 +124,5 @@ export interface GameSnapshot {
   lastSavedAt: number;
   offlineReport: OfflineReport | null;
   nextMonsterId: number;
+  settings: GameSettings;
 }

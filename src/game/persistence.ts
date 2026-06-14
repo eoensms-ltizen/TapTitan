@@ -1,6 +1,6 @@
-import { OFFLINE_CAP_SECONDS, SAVE_KEY, SAVE_VERSION } from "./balance";
+import { OFFLINE_CAP_SECONDS, PRESTIGE_UPGRADES, SAVE_KEY, SAVE_VERSION } from "./balance";
 import { createMonster, getOfflineReward, isBossStage } from "./formulas";
-import type { GameSnapshot, HeroId, SkillId, SkillRuntime } from "./types";
+import type { GameSettings, GameSnapshot, HeroId, PrestigeUpgradeId, SkillId, SkillRuntime } from "./types";
 
 type StoredSave = {
   version: number;
@@ -17,6 +17,13 @@ const HERO_IDS: HeroId[] = [
 ];
 
 const SKILL_IDS: SkillId[] = ["titan_surge", "gold_pact", "boss_breaker"];
+
+const PRESTIGE_UPGRADE_IDS = PRESTIGE_UPGRADES.map((upgrade) => upgrade.id);
+
+const DEFAULT_SETTINGS: GameSettings = {
+  soundEnabled: true,
+  hapticsEnabled: true,
+};
 
 function emptySkillRuntime(): SkillRuntime {
   return {
@@ -43,6 +50,14 @@ export function createDefaultSnapshot(now = Date.now()): GameSnapshot {
     {} as Record<SkillId, SkillRuntime>,
   );
 
+  const prestigeUpgrades = PRESTIGE_UPGRADE_IDS.reduce(
+    (levels, id) => {
+      levels[id] = 0;
+      return levels;
+    },
+    {} as Record<PrestigeUpgradeId, number>,
+  );
+
   return {
     version: SAVE_VERSION,
     gold: 0,
@@ -57,6 +72,8 @@ export function createDefaultSnapshot(now = Date.now()): GameSnapshot {
     bossAttempts: 0,
     monster: createMonster(1, 1, 0, false, now),
     prestigeShards: 0,
+    lifetimePrestigeShards: 0,
+    prestigeUpgrades,
     prestigeCount: 0,
     totalTaps: 0,
     totalKills: 0,
@@ -64,6 +81,7 @@ export function createDefaultSnapshot(now = Date.now()): GameSnapshot {
     lastSavedAt: now,
     offlineReport: null,
     nextMonsterId: 2,
+    settings: DEFAULT_SETTINGS,
   };
 }
 
@@ -86,6 +104,22 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
       cooldownUntil: Math.max(0, Number(storedSkill?.cooldownUntil) || 0),
     };
   }
+
+  const prestigeUpgrades = { ...fallback.prestigeUpgrades };
+  for (const upgradeId of PRESTIGE_UPGRADE_IDS) {
+    prestigeUpgrades[upgradeId] = Math.max(0, Math.floor(Number(input.prestigeUpgrades?.[upgradeId]) || 0));
+  }
+
+  const settings: GameSettings = {
+    soundEnabled:
+      typeof input.settings?.soundEnabled === "boolean"
+        ? input.settings.soundEnabled
+        : fallback.settings.soundEnabled,
+    hapticsEnabled:
+      typeof input.settings?.hapticsEnabled === "boolean"
+        ? input.settings.hapticsEnabled
+        : fallback.settings.hapticsEnabled,
+  };
 
   const nextMonsterId = Math.max(2, Math.floor(Number(input.nextMonsterId) || 2));
   const monsterWasBoss =
@@ -117,6 +151,11 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
       hp: savedHp,
     },
     prestigeShards: Math.max(0, Math.floor(Number(input.prestigeShards) || 0)),
+    lifetimePrestigeShards: Math.max(
+      Math.max(0, Math.floor(Number(input.prestigeShards) || 0)),
+      Math.floor(Number(input.lifetimePrestigeShards) || 0),
+    ),
+    prestigeUpgrades,
     prestigeCount: Math.max(0, Math.floor(Number(input.prestigeCount) || 0)),
     totalTaps: Math.max(0, Math.floor(Number(input.totalTaps) || 0)),
     totalKills: Math.max(0, Math.floor(Number(input.totalKills) || 0)),
@@ -124,6 +163,7 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
     lastSavedAt: Math.max(0, Number(input.lastSavedAt) || now),
     offlineReport: null,
     nextMonsterId,
+    settings,
   };
 }
 
@@ -139,7 +179,7 @@ export function loadSnapshot(now = Date.now()): GameSnapshot {
 
   try {
     const stored = JSON.parse(raw) as StoredSave;
-    if (stored.version !== SAVE_VERSION || !stored.snapshot) {
+    if (!stored.snapshot || stored.version > SAVE_VERSION) {
       return createDefaultSnapshot(now);
     }
 

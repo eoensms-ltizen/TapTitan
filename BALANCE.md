@@ -73,3 +73,26 @@ offlineGold = kills * currentGoldReward * 0.32
 - 보스가 과하게 어렵다면 보스 HP 계수 `1.55` 또는 제한 시간 `30초`를 조정한다.
 - 프레스티지가 너무 빠르면 `MIN_PRESTIGE_STAGE`를 20 이상으로 올린다.
 - 방치 보상이 약하면 오프라인 보상 계수 `0.32`를 올린다.
+
+## 개선 마감 밸런스
+
+프레스티지 업그레이드:
+
+```text
+Ancient Edge  = +10% tap damage per level, cost 1 * 1.55^level, max 25
+Guild Oath    = +8% hero DPS per level, cost 1 * 1.60^level, max 25
+Fortune Seal  = +10% gold per level, cost 2 * 1.70^level, max 20
+Chrono Brand  = +1.5s boss timer per level, cost 2 * 1.85^level, max 15
+```
+
+보스 특성:
+
+```text
+Ember Rage      HP x1.12, gold x1.18, time x1.00
+Bone Guard      HP x1.25, gold x1.10, time x1.06
+Mire Regen      HP x1.16, gold x1.16, time x0.96
+Crystal Barrier HP x1.32, gold x1.24, time x1.12
+Rift Haste      HP x0.94, gold x1.35, time x0.82
+```
+
+영구 데미지는 lifetime Relic Shards 기준으로 계산한다. 따라서 shard를 업그레이드에 사용해도 기본 프레스티지 데미지 보너스는 감소하지 않는다.

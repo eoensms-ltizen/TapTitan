@@ -1,6 +1,8 @@
 import {
   BASE_TAP_DAMAGE,
   BOSS_EVERY_STAGE,
+  BOSS_POWER_BY_ID,
+  BOSS_POWERS,
   BOSS_TIME_LIMIT_MS,
   CRIT_CHANCE,
   CRIT_MULTIPLIER,
@@ -11,10 +13,15 @@ import {
   PLAYER_DAMAGE_PER_LEVEL,
   PLAYER_UPGRADE_BASE_COST,
   PLAYER_UPGRADE_COST_GROWTH,
+  PRESTIGE_BOSS_TIME_PER_LEVEL_MS,
   PRESTIGE_DAMAGE_PER_SHARD,
+  PRESTIGE_GOLD_PER_LEVEL,
+  PRESTIGE_HERO_DPS_PER_LEVEL,
+  PRESTIGE_TAP_DAMAGE_PER_LEVEL,
+  PRESTIGE_UPGRADE_BY_ID,
   SKILL_BY_ID,
 } from "./balance";
-import type { GameSnapshot, HeroId, Monster, MonsterVariant, SkillId } from "./types";
+import type { BossPowerId, GameSnapshot, HeroId, Monster, MonsterVariant, PrestigeUpgradeId, SkillId } from "./types";
 
 const VARIANT_IDS = Object.keys(MONSTER_VARIANTS) as MonsterVariant[];
 
@@ -24,6 +31,57 @@ export function isBossStage(stage: number): boolean {
 
 export function getPrestigeDamageMultiplier(shards: number): number {
   return 1 + shards * PRESTIGE_DAMAGE_PER_SHARD;
+}
+
+export function getPrestigeUpgradeCost(upgradeId: PrestigeUpgradeId, level: number): number {
+  const upgrade = PRESTIGE_UPGRADE_BY_ID[upgradeId];
+  return Math.floor(upgrade.baseCost * upgrade.costGrowth ** level);
+}
+
+export function getPrestigeUpgradeBonus(upgradeId: PrestigeUpgradeId, level: number): number {
+  switch (upgradeId) {
+    case "ancient_edge":
+      return level * PRESTIGE_TAP_DAMAGE_PER_LEVEL;
+    case "guild_oath":
+      return level * PRESTIGE_HERO_DPS_PER_LEVEL;
+    case "fortune_seal":
+      return level * PRESTIGE_GOLD_PER_LEVEL;
+    case "chrono_brand":
+      return level * PRESTIGE_BOSS_TIME_PER_LEVEL_MS;
+  }
+}
+
+export function getPrestigeUpgradeMultipliers(snapshot: GameSnapshot): {
+  tap: number;
+  dps: number;
+  gold: number;
+  bossTimeMs: number;
+} {
+  return {
+    tap: 1 + getPrestigeUpgradeBonus("ancient_edge", snapshot.prestigeUpgrades.ancient_edge),
+    dps: 1 + getPrestigeUpgradeBonus("guild_oath", snapshot.prestigeUpgrades.guild_oath),
+    gold: 1 + getPrestigeUpgradeBonus("fortune_seal", snapshot.prestigeUpgrades.fortune_seal),
+    bossTimeMs: getPrestigeUpgradeBonus("chrono_brand", snapshot.prestigeUpgrades.chrono_brand),
+  };
+}
+
+export function getPermanentDamageMultiplier(snapshot: GameSnapshot): number {
+  return getPrestigeDamageMultiplier(snapshot.lifetimePrestigeShards);
+}
+
+export function getBossPowerForStage(stage: number): BossPowerId {
+  return BOSS_POWERS[Math.floor(stage / BOSS_EVERY_STAGE) % BOSS_POWERS.length].id;
+}
+
+export function getBossTimeLimitMs(snapshot: GameSnapshot): number {
+  return getBossTimeLimitForStage(snapshot, snapshot.stage);
+}
+
+export function getBossTimeLimitForStage(snapshot: GameSnapshot, stage: number): number {
+  const upgrades = getPrestigeUpgradeMultipliers(snapshot);
+  const bossPower = BOSS_POWER_BY_ID[getBossPowerForStage(stage)];
+  const powerMultiplier = bossPower?.timeMultiplier ?? 1;
+  return Math.floor(BOSS_TIME_LIMIT_MS * powerMultiplier + upgrades.bossTimeMs);
 }
 
 export function getPlayerUpgradeCost(level: number): number {
@@ -48,6 +106,18 @@ export function getHeroDps(heroId: HeroId, level: number): number {
   const hero = HERO_BY_ID[heroId];
   const milestoneMultiplier = 2 ** Math.floor(level / 25);
   return hero.baseDps * level * hero.dpsGrowth ** Math.max(0, level - 1) * milestoneMultiplier;
+}
+
+export function getHeroMilestone(level: number): { currentMultiplier: number; nextLevel: number | null; progress: number } {
+  const currentTier = Math.floor(level / 25);
+  const nextLevel = currentTier >= 8 ? null : (currentTier + 1) * 25;
+  const progressBase = currentTier * 25;
+  const progress = nextLevel === null ? 1 : Math.max(0, Math.min(1, (level - progressBase) / 25));
+  return {
+    currentMultiplier: 2 ** currentTier,
+    nextLevel,
+    progress,
+  };
 }
 
 export function getSkillMultipliers(snapshot: GameSnapshot, now: number): {
@@ -76,27 +146,42 @@ export function getSkillMultipliers(snapshot: GameSnapshot, now: number): {
 export function getTapDamage(snapshot: GameSnapshot, now: number): number {
   const base = BASE_TAP_DAMAGE + snapshot.playerLevel * PLAYER_DAMAGE_PER_LEVEL;
   const skills = getSkillMultipliers(snapshot, now);
-  return base * getPrestigeDamageMultiplier(snapshot.prestigeShards) * skills.tap * skills.allDamage;
+  const prestige = getPrestigeUpgradeMultipliers(snapshot);
+  return base * getPermanentDamageMultiplier(snapshot) * prestige.tap * skills.tap * skills.allDamage;
 }
 
 export function getTotalDps(snapshot: GameSnapshot, now: number): number {
   const baseDps = HEROES.reduce((sum, hero) => sum + getHeroDps(hero.id, snapshot.heroLevels[hero.id]), 0);
   const skills = getSkillMultipliers(snapshot, now);
-  return baseDps * getPrestigeDamageMultiplier(snapshot.prestigeShards) * skills.allDamage;
+  const prestige = getPrestigeUpgradeMultipliers(snapshot);
+  return baseDps * getPermanentDamageMultiplier(snapshot) * prestige.dps * skills.allDamage;
 }
 
-export function getMonsterMaxHp(stage: number, index: number, isBoss: boolean): number {
+export function getMonsterMaxHp(
+  stage: number,
+  index: number,
+  isBoss: boolean,
+  bossPower: BossPowerId | null = null,
+): number {
   if (isBoss) {
-    return Math.floor(130 * 1.55 ** (stage - 1) * (1 + Math.floor(stage / 10) * 0.15));
+    const power = bossPower ? BOSS_POWER_BY_ID[bossPower] : null;
+    const powerMultiplier = power?.hpMultiplier ?? 1;
+    return Math.floor(130 * 1.55 ** (stage - 1) * (1 + Math.floor(stage / 10) * 0.15) * powerMultiplier);
   }
 
   const stagePressure = 1 + Math.max(0, index) * 0.17;
   return Math.floor(18 * 1.44 ** (stage - 1) * stagePressure);
 }
 
-export function getMonsterGoldReward(stage: number, index: number, isBoss: boolean): number {
+export function getMonsterGoldReward(
+  stage: number,
+  index: number,
+  isBoss: boolean,
+  bossPower: BossPowerId | null = null,
+): number {
   const normal = 7 * 1.23 ** (stage - 1) * (1 + index * 0.08);
-  return Math.floor(isBoss ? normal * 6.8 : normal);
+  const power = bossPower ? BOSS_POWER_BY_ID[bossPower] : null;
+  return Math.floor(isBoss ? normal * 6.8 * (power?.goldMultiplier ?? 1) : normal);
 }
 
 export function createMonster(
@@ -105,11 +190,14 @@ export function createMonster(
   index: number,
   isBoss: boolean,
   now: number,
+  bossTimeLimitMs = BOSS_TIME_LIMIT_MS,
 ): Monster {
   const variant = VARIANT_IDS[(stage + index + (isBoss ? 2 : 0)) % VARIANT_IDS.length];
+  const bossPower = isBoss ? getBossPowerForStage(stage) : null;
   const variantDefinition = MONSTER_VARIANTS[variant];
-  const maxHp = getMonsterMaxHp(stage, index, isBoss);
-  const name = isBoss ? `Titan ${variantDefinition.name}` : variantDefinition.name;
+  const power = bossPower ? BOSS_POWER_BY_ID[bossPower] : null;
+  const maxHp = getMonsterMaxHp(stage, index, isBoss, bossPower);
+  const name = isBoss && power ? `${power.name} ${variantDefinition.name}` : variantDefinition.name;
 
   return {
     id,
@@ -118,11 +206,12 @@ export function createMonster(
     stage,
     index,
     isBoss,
+    bossPower,
     maxHp,
     hp: maxHp,
-    goldReward: getMonsterGoldReward(stage, index, isBoss),
+    goldReward: getMonsterGoldReward(stage, index, isBoss, bossPower),
     spawnedAt: now,
-    bossDeadline: isBoss ? now + BOSS_TIME_LIMIT_MS : null,
+    bossDeadline: isBoss ? now + bossTimeLimitMs : null,
   };
 }
 
@@ -143,7 +232,8 @@ export function getOfflineReward(snapshot: GameSnapshot, elapsedSeconds: number,
   const monsterHp = getMonsterMaxHp(snapshot.stage, snapshot.killsInStage, false);
   const kills = (dps * elapsedSeconds) / Math.max(monsterHp, 1);
   const reward = getMonsterGoldReward(snapshot.stage, snapshot.killsInStage, false);
-  return Math.floor(kills * reward * 0.32);
+  const prestige = getPrestigeUpgradeMultipliers(snapshot);
+  return Math.floor(kills * reward * prestige.gold * 0.32);
 }
 
 export function isSkillActive(snapshot: GameSnapshot, skillId: SkillId, now: number): boolean {

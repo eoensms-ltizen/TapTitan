@@ -47,3 +47,12 @@ npm run typecheck
 npm run build
 npm run preview
 ```
+
+## Polish Update
+
+- Web Audio feedback for hits, kills, upgrades, skills, prestige, save, and reset.
+- Optional vibration feedback for supported mobile browsers.
+- Boss traits with unique HP, reward, and timer modifiers.
+- Hero milestone progress UI for 25-level DPS jumps.
+- Relic Shard prestige upgrade tree.
+- GitHub Pages deployment via `.github/workflows/pages.yml`.

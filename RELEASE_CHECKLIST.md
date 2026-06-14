@@ -9,6 +9,7 @@
 - [x] `npm audit` reported 0 vulnerabilities.
 - [x] Mobile 390x844 render checked with no horizontal overflow.
 - [x] Click attack, monster kill, gold gain, player upgrade, hero DPS, boss fail/retry, skill buy/activate, save/reload, and prestige store logic checked.
+- [x] Polish pass added sound/haptics toggles, boss traits, hero milestones, and prestige upgrades.
 
 ## 기능
 
