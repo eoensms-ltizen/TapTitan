@@ -23,7 +23,7 @@ import {
 } from "./balance";
 import type { BossPowerId, GameSnapshot, HeroId, Monster, MonsterVariant, PrestigeUpgradeId, SkillId } from "./types";
 
-const MONSTER_SEQUENCE: MonsterVariant[] = ["ember_horn", "frost_crag", "moss_golem", "shadow_bat"];
+const MONSTER_SEQUENCE: MonsterVariant[] = ["rift_ogre", "ash_imp", "bone_knight", "mire_beast", "crystal_wraith"];
 
 export function isBossStage(stage: number): boolean {
   return stage > 0 && stage % BOSS_EVERY_STAGE === 0;

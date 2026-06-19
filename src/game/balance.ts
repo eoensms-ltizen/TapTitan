@@ -279,28 +279,4 @@ export const MONSTER_VARIANTS: Record<
     shadow: "#581c87",
     eyes: "#f5d0fe",
   },
-  ember_horn: {
-    name: "Ember Horn",
-    accent: "#f97316",
-    shadow: "#7f1d1d",
-    eyes: "#fde68a",
-  },
-  frost_crag: {
-    name: "Frost Crag",
-    accent: "#67e8f9",
-    shadow: "#0f3b62",
-    eyes: "#e0faff",
-  },
-  moss_golem: {
-    name: "Moss Golem",
-    accent: "#8ccf5f",
-    shadow: "#253528",
-    eyes: "#bef264",
-  },
-  shadow_bat: {
-    name: "Shadow Bat",
-    accent: "#a78bfa",
-    shadow: "#24123f",
-    eyes: "#f0abfc",
-  },
 };

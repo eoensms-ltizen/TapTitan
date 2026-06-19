@@ -16,11 +16,7 @@ export type MonsterVariant =
   | "bone_knight"
   | "mire_beast"
   | "crystal_wraith"
-  | "rift_ogre"
-  | "ember_horn"
-  | "frost_crag"
-  | "moss_golem"
-  | "shadow_bat";
+  | "rift_ogre";
 
 export interface Monster {
   id: number;

@@ -46,14 +46,14 @@ import heroEmberSquireFrame0 from "./assets/sprites/hero-motion/ember_squire-fra
 import heroEmberSquireFrame1 from "./assets/sprites/hero-motion/ember_squire-frame-1.png";
 import heroEmberSquireFrame2 from "./assets/sprites/hero-motion/ember_squire-frame-2.png";
 import heroEmberSquireFrame3 from "./assets/sprites/hero-motion/ember_squire-frame-3.png";
-import heroIronWardenFrame0 from "./assets/sprites/hero-motion/iron_warden-frame-0.png";
-import heroIronWardenFrame1 from "./assets/sprites/hero-motion/iron_warden-frame-1.png";
-import heroIronWardenFrame2 from "./assets/sprites/hero-motion/iron_warden-frame-2.png";
-import heroIronWardenFrame3 from "./assets/sprites/hero-motion/iron_warden-frame-3.png";
-import heroRuneArcherFrame0 from "./assets/sprites/hero-motion/rune_archer-frame-0.png";
-import heroRuneArcherFrame1 from "./assets/sprites/hero-motion/rune_archer-frame-1.png";
-import heroRuneArcherFrame2 from "./assets/sprites/hero-motion/rune_archer-frame-2-clean.png";
-import heroRuneArcherFrame3 from "./assets/sprites/hero-motion/rune_archer-frame-3.png";
+import heroIronWardenFrame0 from "./assets/sprites/hero-motion/iron_warden-frame-0-mirrored.png";
+import heroIronWardenFrame1 from "./assets/sprites/hero-motion/iron_warden-frame-1-mirrored.png";
+import heroIronWardenFrame2 from "./assets/sprites/hero-motion/iron_warden-frame-2-mirrored.png";
+import heroIronWardenFrame3 from "./assets/sprites/hero-motion/iron_warden-frame-3-mirrored.png";
+import heroRuneArcherFrame0 from "./assets/sprites/hero-motion/rune_archer-frame-0-mirrored.png";
+import heroRuneArcherFrame1 from "./assets/sprites/hero-motion/rune_archer-frame-1-mirrored.png";
+import heroRuneArcherFrame2 from "./assets/sprites/hero-motion/rune_archer-frame-2-mirrored.png";
+import heroRuneArcherFrame3 from "./assets/sprites/hero-motion/rune_archer-frame-3-mirrored.png";
 import heroStarHexerFrame0 from "./assets/sprites/hero-motion/star_hexer-frame-0.png";
 import heroStarHexerFrame1 from "./assets/sprites/hero-motion/star_hexer-frame-1.png";
 import heroStarHexerFrame2 from "./assets/sprites/hero-motion/star_hexer-frame-2.png";
@@ -62,18 +62,14 @@ import heroVoidPriestFrame0 from "./assets/sprites/hero-motion/void_priest-frame
 import heroVoidPriestFrame1 from "./assets/sprites/hero-motion/void_priest-frame-1.png";
 import heroVoidPriestFrame2 from "./assets/sprites/hero-motion/void_priest-frame-2.png";
 import heroVoidPriestFrame3 from "./assets/sprites/hero-motion/void_priest-frame-3.png";
-import monsterAshImp from "./assets/sprites/monster-ash-imp.png";
-import monsterBoneKnight from "./assets/sprites/monster-bone-knight.png";
-import monsterCrystalWraith from "./assets/sprites/monster-crystal-wraith.png";
-import monsterEmberHorn from "./assets/sprites/monster-ember-horn.png";
-import monsterFrostCrag from "./assets/sprites/monster-frost-crag.png";
-import monsterMireBeast from "./assets/sprites/monster-mire-beast.png";
-import monsterMossGolem from "./assets/sprites/monster-moss-golem.png";
-import monsterRiftOgre from "./assets/sprites/monster-rift-ogre.png";
-import monsterShadowBat from "./assets/sprites/monster-shadow-bat.png";
-import battleCrystalCavern from "./assets/battle-crystal-cavern.png";
-import battleHauntedForest from "./assets/battle-haunted-forest.png";
-import battleLavaRuins from "./assets/battle-lava-ruins.png";
+import monsterAshImp from "./assets/sprites/monster-ash-imp-v2.png";
+import monsterBoneKnight from "./assets/sprites/monster-bone-knight-v2.png";
+import monsterCrystalWraith from "./assets/sprites/monster-crystal-wraith-v2.png";
+import monsterMireBeast from "./assets/sprites/monster-mire-beast-v2.png";
+import monsterRiftOgre from "./assets/sprites/monster-rift-ogre-v2.png";
+import battleCavern from "./assets/battle-cavern-v2.png";
+import battleCrystalGrove from "./assets/battle-crystal-grove-v2.png";
+import battleLava from "./assets/battle-lava-v2.png";
 
 type TabId = "player" | "heroes" | "skills" | "prestige" | "settings";
 
@@ -127,9 +123,9 @@ const heroFrameOffsetsById: Record<HeroId, Array<{ x: number; y: number }>> = {
   ],
   rune_archer: [
     { x: 0, y: 0 },
-    { x: 13.32, y: 20.11 },
-    { x: 24.06, y: 20.11 },
-    { x: 4.72, y: 0 },
+    { x: -5, y: 20.11 },
+    { x: -10, y: 20.11 },
+    { x: -2, y: 0 },
   ],
   void_priest: [
     { x: 0, y: 0 },
@@ -139,9 +135,9 @@ const heroFrameOffsetsById: Record<HeroId, Array<{ x: number; y: number }>> = {
   ],
   iron_warden: [
     { x: 0, y: 0 },
-    { x: 10.54, y: 0 },
-    { x: 30.09, y: 1.2 },
-    { x: 4.86, y: 0 },
+    { x: -4, y: 0 },
+    { x: -12, y: 1.2 },
+    { x: -2, y: 0 },
   ],
   star_hexer: [
     { x: 0, y: 0 },
@@ -157,13 +153,9 @@ const monsterSpriteByVariant: Record<MonsterVariant, string> = {
   mire_beast: monsterMireBeast,
   crystal_wraith: monsterCrystalWraith,
   rift_ogre: monsterRiftOgre,
-  ember_horn: monsterEmberHorn,
-  frost_crag: monsterFrostCrag,
-  moss_golem: monsterMossGolem,
-  shadow_bat: monsterShadowBat,
 };
 
-const battleBackgrounds = [battleHauntedForest, battleLavaRuins, battleCrystalCavern];
+const battleBackgrounds = [battleCavern, battleLava, battleCrystalGrove];
 
 function getBattleBackground(stage: number) {
   return battleBackgrounds[Math.max(0, stage - 1) % battleBackgrounds.length];
@@ -344,7 +336,6 @@ function HeroUnit({
   const attackDurationMs = getHeroAttackDurationMs(level);
   const attackDelay = `${Math.round(index * attackDurationMs * -0.18)}ms`;
   const frameOffsets = heroFrameOffsetsById[hero.id];
-  const flipped = hero.id === "rune_archer" || hero.id === "iron_warden";
 
   return (
     <div
@@ -354,8 +345,6 @@ function HeroUnit({
         top: `${slot.y}%`,
         color: hero.accent,
         "--hero-attack-duration": `${attackDurationMs}ms`,
-        "--hero-facing": flipped ? "-1" : "1",
-        "--hero-flip-offset": flipped ? "100%" : "0%",
       } as React.CSSProperties}
       aria-label={`${hero.name} level ${level}, ${formatNumber(dps)} DPS`}
     >
@@ -369,7 +358,7 @@ function HeroUnit({
             draggable={false}
             style={{
               animationDelay: attackDelay,
-              transform: `translate(${frameOffsets[frameIndex].x * (flipped ? -1 : 1)}%, ${frameOffsets[frameIndex].y}%)`,
+              transform: `translate(${frameOffsets[frameIndex].x}%, ${frameOffsets[frameIndex].y}%)`,
             }}
           />
         ))}
