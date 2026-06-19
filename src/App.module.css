@@ -1,16 +1,30 @@
 :root {
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-shell-pad: 0px;
+  --pixel-navy: #07194a;
+  --pixel-navy-dark: #020817;
+  --pixel-navy-mid: #0b2868;
+  --pixel-gold: #d6a947;
+  --pixel-gold-light: #ffe6a3;
+  --pixel-gold-dark: #5f3510;
+  --pixel-ink: #01030a;
+  --pixel-white: #fff4d8;
 }
 
 .appShell {
+  min-height: 100svh;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  overflow: hidden;
+  overflow: auto;
+  padding: var(--app-shell-pad);
   background:
-    radial-gradient(circle at 50% 0%, rgba(126, 34, 206, 0.2), transparent 32%),
-    linear-gradient(160deg, #120f18 0%, #1d1415 44%, #101417 100%);
-  color: #f8f1e7;
+    linear-gradient(rgba(3, 9, 26, 0.28) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(3, 9, 26, 0.28) 1px, transparent 1px),
+    radial-gradient(circle at 50% 20%, rgba(25, 71, 140, 0.38), transparent 38%),
+    linear-gradient(180deg, #020713 0%, #04112c 58%, #01030a 100%);
+  background-size: 4px 4px, 4px 4px, auto, auto;
+  color: var(--pixel-white);
   touch-action: manipulation;
 }
 
@@ -26,16 +40,16 @@
 .backdrop span {
   content: "";
   position: absolute;
-  width: 2px;
-  height: 2px;
-  border-radius: 999px;
-  background: rgba(255, 214, 165, 0.55);
+  width: 3px;
+  height: 3px;
+  border-radius: 0;
+  background: rgba(255, 230, 163, 0.55);
   box-shadow:
-    10vw 12vh rgba(255, 255, 255, 0.22),
-    25vw 42vh rgba(250, 204, 21, 0.22),
-    72vw 18vh rgba(125, 211, 252, 0.25),
-    82vw 70vh rgba(248, 113, 113, 0.23),
-    45vw 88vh rgba(167, 139, 250, 0.25);
+    10vw 12vh rgba(255, 255, 255, 0.18),
+    25vw 42vh rgba(214, 169, 71, 0.24),
+    72vw 18vh rgba(125, 211, 252, 0.2),
+    82vw 70vh rgba(129, 80, 210, 0.24),
+    45vw 88vh rgba(255, 230, 163, 0.18);
   animation: emberDrift 9s linear infinite;
 }
 
@@ -65,76 +79,134 @@
 
 .gameFrame {
   position: relative;
-  width: min(100vw, 520px);
-  height: 100dvh;
-  min-height: 680px;
+  width: min(
+    calc(100vw - var(--app-shell-pad) * 2),
+    720px,
+    calc((100dvh - var(--app-shell-pad) * 2) * 0.5625)
+  );
+  height: min(
+    calc(100dvh - var(--app-shell-pad) * 2),
+    1280px,
+    calc((100vw - var(--app-shell-pad) * 2) * 1.777778)
+  );
+  width: min(
+    calc(100vw - var(--app-shell-pad) * 2),
+    720px,
+    calc((100svh - var(--app-shell-pad) * 2) * 0.5625)
+  );
+  height: min(
+    calc(100svh - var(--app-shell-pad) * 2),
+    1280px,
+    calc((100vw - var(--app-shell-pad) * 2) * 1.777778)
+  );
+  max-width: 720px;
+  max-height: 1280px;
+  aspect-ratio: 9 / 16;
+  min-height: 0;
   display: grid;
-  grid-template-rows: auto minmax(300px, 1fr) minmax(268px, 38vh);
+  grid-template-rows: auto auto minmax(0, 1fr) clamp(300px, 38%, 500px);
   overflow: hidden;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(23, 17, 29, 0.92), rgba(18, 13, 17, 0.98));
-  background-size: 42px 42px, 42px 42px, auto;
-  box-shadow: 0 0 80px rgba(0, 0, 0, 0.4);
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(7, 25, 74, 0.98), rgba(2, 8, 23, 0.98));
+  background-size: 5px 5px, 5px 5px, auto;
+  border: 3px solid var(--pixel-gold);
+  box-shadow:
+    0 0 0 2px var(--pixel-ink),
+    0 0 0 5px var(--pixel-gold-dark),
+    0 0 70px rgba(0, 0, 0, 0.66);
+  image-rendering: pixelated;
 }
 
 .topBar {
   z-index: 3;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  padding: 14px 14px 8px;
-  background: linear-gradient(180deg, rgba(8, 7, 11, 0.94), rgba(19, 15, 24, 0.62));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0;
+  padding: 8px 8px 6px;
+  background: var(--pixel-navy-dark);
+  border-bottom: 3px solid var(--pixel-gold);
+  box-shadow: 0 3px 0 var(--pixel-ink);
 }
 
 .mainStat {
-  min-height: 44px;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  border: 1px solid rgba(255, 214, 165, 0.22);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(248, 113, 113, 0.1));
-  color: #fff7ed;
-  font-size: clamp(1.35rem, 6vw, 2rem);
+  gap: 12px;
+  border: 3px solid var(--pixel-gold);
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #102d73, #07194a);
+  background-size: auto, auto;
+  color: var(--pixel-white);
+  font-size: clamp(1.65rem, 6vw, 2.35rem);
   font-weight: 900;
   letter-spacing: 0;
+  text-shadow:
+    3px 3px 0 #121212,
+    -1px -1px 0 var(--pixel-gold-light);
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    inset 0 0 0 4px rgba(255, 230, 163, 0.2);
+}
+
+.mainStat svg {
+  color: #f7c84f;
+  filter: drop-shadow(2px 2px 0 #3b2108);
 }
 
 .statGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
+  gap: 0;
 }
 
 .statGrid span {
-  min-height: 30px;
+  min-height: 39px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.055);
-  color: #d6d3d1;
-  font-size: 0.72rem;
-  font-weight: 700;
+  border: 3px solid var(--pixel-gold);
+  border-top: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #0e2a69, #06163c);
+  color: var(--pixel-white);
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #101010;
   white-space: nowrap;
+  box-shadow: inset 0 0 0 2px var(--pixel-ink);
+}
+
+.statGrid span + span {
+  border-left: 0;
 }
 
 .arena {
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  padding: 0 14px 10px;
+  padding: 8px 10px 10px;
   min-height: 0;
 }
 
 .stageStrip {
   display: grid;
   gap: 7px;
-  padding: 8px 0 6px;
+  padding: 8px 10px;
+  border: 3px solid var(--pixel-gold);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #0b2868, #05143b);
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    0 3px 0 var(--pixel-ink);
 }
 
 .stageStrip > div:first-child {
@@ -142,27 +214,30 @@
   justify-content: space-between;
   gap: 10px;
   align-items: baseline;
-  color: #fef3c7;
+  color: var(--pixel-white);
+  text-shadow: 2px 2px 0 #080808;
 }
 
 .stageStrip strong {
-  font-size: 0.88rem;
+  font-size: 1.05rem;
+  text-transform: uppercase;
 }
 
 .stageStrip span {
-  color: #a8a29e;
-  font-size: 0.74rem;
+  color: #f8e6bf;
+  font-size: 0.78rem;
   font-weight: 700;
 }
 
 .stageMeter,
 .hpBar,
 .timerBar {
-  height: 9px;
+  height: 11px;
   overflow: hidden;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(3, 7, 18, 0.55);
+  border-radius: 0;
+  border: 2px solid var(--pixel-gold);
+  background: #01030a;
+  box-shadow: inset 0 0 0 2px #130a02;
 }
 
 .stageMeter span,
@@ -171,26 +246,32 @@
   display: block;
   height: 100%;
   border-radius: inherit;
+}
+
+.stageMeter span,
+.timerBar span {
   transition: width 180ms ease;
 }
 
 .stageMeter span {
-  background: linear-gradient(90deg, #22c55e, #facc15);
+  background: linear-gradient(90deg, #46d368, #f4d34f);
 }
 
 .monsterPanel {
   position: relative;
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-  gap: 8px;
+  gap: 0;
   min-height: 0;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 0;
+  border-radius: 0;
+  border: 3px solid var(--pixel-gold);
   background:
-    radial-gradient(circle at 50% 42%, rgba(248, 113, 113, 0.16), transparent 32%),
-    linear-gradient(180deg, rgba(41, 30, 36, 0.78), rgba(13, 12, 18, 0.9));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%),
+    linear-gradient(180deg, #0b2868, #06163d);
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    0 4px 0 var(--pixel-ink);
 }
 
 .hpHeader,
@@ -199,23 +280,35 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  color: #e7e5e4;
-  font-size: 0.78rem;
-  font-weight: 800;
+  min-height: 42px;
+  padding: 8px 12px 3px;
+  color: var(--pixel-white);
+  font-size: 1rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
 }
 
 .hpBar {
-  height: 13px;
+  height: 17px;
+  margin: 0 12px 10px;
 }
 
 .hpBar span {
-  background: linear-gradient(90deg, #22c55e, #f97316, #ef4444);
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.35);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(90deg, #2cc35d 0%, #e2d949 47%, #e96d29 74%, #cc3030 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 0 14px rgba(239, 68, 68, 0.28);
+  transition: none;
 }
 
 .timerRow {
   min-height: 20px;
-  color: #fecaca;
+  margin: 0 12px 8px;
+  padding: 4px 0 8px;
+  color: #ffe6a3;
 }
 
 .timerBar {
@@ -227,34 +320,40 @@
 }
 
 .monsterButton {
+  --battle-background: url("./assets/pixel-cave-battlefield.png");
   position: relative;
   min-height: 0;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 8px;
-  background:
-    radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.08), transparent 24%),
-    radial-gradient(circle at 50% 100%, rgba(250, 204, 21, 0.12), transparent 30%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.18));
+  border-radius: 0;
+  background-image:
+    linear-gradient(180deg, rgba(2, 8, 23, 0.04), rgba(2, 8, 23, 0.42)),
+    var(--battle-background);
+  background-position: center, center;
+  background-size: auto, cover;
+  background-repeat: repeat, no-repeat;
   cursor: pointer;
   outline: none;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+  touch-action: none;
+  image-rendering: pixelated;
 }
 
 .monsterButton::before {
   content: "";
   position: absolute;
-  inset: 10%;
-  border-radius: 50%;
-  background: conic-gradient(from 180deg, transparent, rgba(255, 255, 255, 0.08), transparent 45%);
-  animation: arenaSpin 12s linear infinite;
+  inset: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    radial-gradient(circle at 50% 58%, transparent 0 24%, rgba(0, 0, 0, 0.28) 62%, rgba(0, 0, 0, 0.56) 100%);
+  background-size: 3px 3px, auto;
+  animation: none;
 }
 
-.monsterButton:active .monsterSvg {
-  transform: translateY(5px) scale(0.96);
+.monsterButton:active .monsterSprite {
   filter: brightness(1.42) saturate(1.25);
 }
 
@@ -264,10 +363,9 @@
 }
 
 .bossButton {
-  background:
-    radial-gradient(circle at 50% 42%, rgba(239, 68, 68, 0.18), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(34, 211, 238, 0.11), transparent 32%),
-    linear-gradient(180deg, rgba(69, 10, 10, 0.18), rgba(0, 0, 0, 0.2));
+  background-image:
+    linear-gradient(180deg, rgba(69, 10, 10, 0.05), rgba(0, 0, 0, 0.44)),
+    var(--battle-background);
 }
 
 .bossTrait {
@@ -276,12 +374,14 @@
   grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
   gap: 6px;
+  margin: 0 12px 8px;
   padding: 6px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
-  color: #fef3c7;
+  border: 2px solid var(--pixel-gold);
+  border-radius: 0;
+  background: #06163d;
+  color: var(--pixel-gold-light);
   font-size: 0.72rem;
+  box-shadow: inset 0 0 0 2px var(--pixel-ink);
 }
 
 .bossTrait span {
@@ -297,170 +397,271 @@
   position: absolute;
   left: 50%;
   top: 50%;
+  z-index: 5;
   width: 128px;
   height: 128px;
   border: 3px solid rgba(255, 255, 255, 0.45);
   border-radius: 999px;
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.75);
-  transition:
-    opacity 120ms ease,
-    transform 180ms ease;
+  animation: hitRingPop 260ms cubic-bezier(0.2, 1.15, 0.28, 1) forwards;
 }
 
-.monsterSvg {
+.hitRing_crit {
+  width: 158px;
+  height: 158px;
+  border-color: rgba(254, 240, 138, 0.72);
+  box-shadow: 0 0 28px rgba(250, 204, 21, 0.28);
+}
+
+.hitRing_kill {
+  width: 190px;
+  height: 190px;
+  border-color: rgba(248, 250, 252, 0.82);
+  box-shadow: 0 0 38px rgba(248, 113, 113, 0.36);
+}
+
+.heroLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.heroUnit {
+  --strike-angle: 0deg;
+  --strike-length: 108px;
+  --strike-x: 50%;
+  --strike-y: 45%;
+  --weapon-angle: -25deg;
+  position: absolute;
+  width: 104px;
+  height: 72px;
+  transform: translate(0, -100%);
+  transform-origin: left bottom;
+}
+
+.heroUnit::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  width: 42px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.38);
+  transform: translateX(-50%);
+}
+
+.heroSprite {
   position: relative;
-  width: min(78%, 310px);
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  transform: translateX(var(--hero-flip-offset, 0%)) scaleX(var(--hero-facing, 1));
+  transform-origin: left bottom;
+  filter:
+    drop-shadow(2px 2px 0 #070707)
+    drop-shadow(0 8px 9px rgba(0, 0, 0, 0.42));
+  pointer-events: none;
+  user-select: none;
+}
+
+.heroFrame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left bottom;
+  image-rendering: pixelated;
+  transform-origin: left bottom;
+  opacity: 0;
+  animation-duration: var(--hero-attack-duration, 1.12s);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-timing-function: step-end;
+}
+
+.heroFrame_0 {
+  animation-name: heroFrame0;
+}
+
+.heroFrame_1 {
+  animation-name: heroFrame1;
+}
+
+.heroFrame_2 {
+  animation-name: heroFrame2;
+}
+
+.heroFrame_3 {
+  animation-name: heroFrame3;
+}
+
+.heroWeapon {
+  display: none;
+}
+
+.heroStrike {
+  position: absolute;
+  left: var(--strike-x);
+  top: var(--strike-y);
+  width: var(--strike-length);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, currentColor, rgba(255, 255, 255, 0.95), transparent);
+  filter: drop-shadow(0 0 7px currentColor);
+  opacity: 0;
+  transform: rotate(var(--strike-angle)) scaleX(0);
+  transform-origin: 0 50%;
+  animation: heroStrike var(--hero-attack-duration, 1.12s) ease-in-out infinite;
+}
+
+.heroProjectile {
+  display: none;
+}
+
+.heroSlot_rune_archer .heroStrike {
+  display: none;
+}
+
+.heroSlot_rune_archer .heroProjectile {
+  position: absolute;
+  left: 20%;
+  top: 43%;
+  z-index: 2;
+  display: block;
+  width: 48px;
+  height: 3px;
+  border-radius: 0;
+  background: linear-gradient(90deg, #fef3c7, #d6a947 72%, #6b3f13);
+  box-shadow:
+    0 0 0 1px rgba(1, 3, 10, 0.75),
+    0 0 8px rgba(255, 230, 163, 0.6);
+  opacity: 0;
+  transform-origin: left center;
+  animation: archerProjectile var(--hero-attack-duration, 1.12s) linear infinite;
+}
+
+.heroSlot_rune_archer .heroProjectile::before,
+.heroSlot_rune_archer .heroProjectile::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.heroSlot_rune_archer .heroProjectile::before {
+  left: -8px;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 10px solid #f8fafc;
+  filter: drop-shadow(1px 1px 0 #070707);
+}
+
+.heroSlot_rune_archer .heroProjectile::after {
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  background:
+    linear-gradient(45deg, transparent 0 48%, #d6a947 50% 58%, transparent 60%),
+    linear-gradient(-45deg, transparent 0 48%, #d6a947 50% 58%, transparent 60%);
+}
+
+.heroSlot_ember_squire {
+  --strike-angle: -24deg;
+  --strike-length: 122px;
+  --strike-x: 60%;
+  --strike-y: 34%;
+  --weapon-angle: -28deg;
+}
+
+.heroSlot_rune_archer {
+  --strike-angle: 162deg;
+  --strike-length: 128px;
+  --strike-x: 37%;
+  --strike-y: 47%;
+  --weapon-angle: -8deg;
+}
+
+.heroSlot_void_priest {
+  --strike-angle: -42deg;
+  --strike-length: 98px;
+  --strike-x: 57%;
+  --strike-y: 35%;
+  --weapon-angle: 188deg;
+}
+
+.heroSlot_iron_warden {
+  --strike-angle: 214deg;
+  --strike-length: 106px;
+  --strike-x: 35%;
+  --strike-y: 34%;
+  --weapon-angle: 205deg;
+  width: 110px;
+  height: 78px;
+}
+
+.heroSlot_star_hexer {
+  --strike-angle: 16deg;
+  --strike-length: 130px;
+  --strike-x: 58%;
+  --strike-y: 47%;
+  --weapon-angle: 0deg;
+}
+
+.monsterImpact {
+  position: relative;
+  z-index: 2;
+  width: min(66%, 300px);
+  height: 100%;
+  max-height: 100%;
+  margin-top: -6px;
+  display: grid;
+  place-items: center;
+  transform-origin: 50% 78%;
+  animation: monsterHitBounce 310ms cubic-bezier(0.2, 1.45, 0.35, 1) both;
+}
+
+.monsterSprite {
+  width: auto;
+  height: auto;
+  max-width: 100%;
   max-height: 92%;
-  overflow: visible;
-  color: var(--monster-accent);
-  filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.45));
-  transform-origin: 50% 75%;
-  transition:
-    transform 90ms ease,
-    filter 90ms ease;
-  animation: monsterIdle 2.8s ease-in-out infinite;
-  --monster-accent: #f97316;
-  --monster-core: #b45309;
-  --monster-shadow: #431407;
-  --monster-eye: #fde68a;
-  --boss-power-accent: #fb7185;
+  display: block;
+  image-rendering: pixelated;
+  pointer-events: none;
+  user-select: none;
+  filter:
+    drop-shadow(3px 3px 0 #070707)
+    drop-shadow(0 18px 18px rgba(0, 0, 0, 0.5));
 }
 
-.bossSvg {
-  width: min(88%, 360px);
-  animation:
-    monsterIdle 2.2s ease-in-out infinite,
-    bossThreat 1.3s ease-in-out infinite;
+.monsterImpact_crit {
+  animation-name: monsterCritBounce;
 }
 
-.monster_ash_imp {
-  --monster-accent: #fb923c;
-  --monster-core: #c2410c;
-  --monster-shadow: #431407;
-  --monster-eye: #fde68a;
+.monsterImpact_kill {
+  animation-name: monsterKillBounce;
 }
 
-.monster_bone_knight {
-  --monster-accent: #e7e5e4;
-  --monster-core: #a8a29e;
-  --monster-shadow: #44403c;
-  --monster-eye: #fb7185;
+.bossButton .monsterImpact {
+  width: min(72%, 330px);
 }
 
-.monster_mire_beast {
-  --monster-accent: #a3e635;
-  --monster-core: #65a30d;
-  --monster-shadow: #365314;
-  --monster-eye: #ecfccb;
-}
-
-.monster_crystal_wraith {
-  --monster-accent: #93c5fd;
-  --monster-core: #2563eb;
-  --monster-shadow: #1e3a8a;
-  --monster-eye: #f0f9ff;
-}
-
-.monster_rift_ogre {
-  --monster-accent: #d8b4fe;
-  --monster-core: #9333ea;
-  --monster-shadow: #581c87;
-  --monster-eye: #f5d0fe;
-}
-
-.bossPower_ember_rage {
-  --boss-power-accent: #fb923c;
-}
-
-.bossPower_bone_guard {
-  --boss-power-accent: #e7e5e4;
-}
-
-.bossPower_mire_regen {
-  --boss-power-accent: #a3e635;
-}
-
-.bossPower_crystal_barrier {
-  --boss-power-accent: #93c5fd;
-}
-
-.bossPower_rift_haste {
-  --boss-power-accent: #d8b4fe;
-}
-
-.monsterShadow {
-  fill: rgba(0, 0, 0, 0.38);
-}
-
-.monsterAura {
-  fill: rgba(239, 68, 68, 0.12);
-  stroke: rgba(248, 113, 113, 0.35);
-  stroke-width: 2;
-  animation: auraPulse 1.4s ease-in-out infinite;
-}
-
-.bossSigil {
-  fill: none;
-  stroke: var(--boss-power-accent);
-  stroke-dasharray: 7 9;
-  stroke-width: 3;
-  opacity: 0.6;
-  transform-origin: 50% 50%;
-  animation: sigilSpin 5s linear infinite;
-}
-
-.bossSigilMark {
-  fill: rgba(255, 255, 255, 0.04);
-  stroke: var(--boss-power-accent);
-  stroke-width: 3;
-  opacity: 0.5;
-}
-
-.monsterHorn,
-.monsterBody,
-.monsterBrow,
-.monsterMouth,
-.monsterFang,
-.monsterScar {
-  filter: url("#monsterGlow");
-}
-
-.monsterHorn {
-  fill: var(--monster-shadow);
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 3;
-}
-
-.monsterBody {
-  fill: url("#bodyGradient");
-  stroke: rgba(255, 255, 255, 0.2);
-  stroke-width: 4;
-}
-
-.monsterBrow,
-.monsterMouth,
-.monsterScar {
-  fill: none;
-  stroke: rgba(17, 24, 39, 0.72);
-  stroke-linecap: round;
-  stroke-width: 8;
-}
-
-.monsterEye {
-  fill: var(--monster-eye);
-  filter: drop-shadow(0 0 8px var(--monster-eye));
-}
-
-.monsterFang {
-  fill: #fff7ed;
-  stroke: rgba(0, 0, 0, 0.2);
-  stroke-width: 2;
+.bossSprite {
+  filter:
+    drop-shadow(3px 3px 0 #070707)
+    drop-shadow(0 0 18px rgba(239, 68, 68, 0.28))
+    drop-shadow(0 20px 20px rgba(0, 0, 0, 0.55));
 }
 
 .floatingHit {
   position: absolute;
-  z-index: 4;
+  z-index: 6;
   pointer-events: none;
   transform: translate(-50%, -50%);
   font-weight: 1000;
@@ -497,21 +698,52 @@
 .buyButton,
 .iconButton,
 .toggleButton {
+  position: relative;
+  overflow: hidden;
   min-height: 42px;
-  border: 0;
-  border-radius: 8px;
+  border: 3px solid var(--pixel-gold);
+  border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #fff7ed;
+  color: var(--pixel-white);
   font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
   cursor: pointer;
   transition:
     transform 100ms ease,
     filter 100ms ease,
     opacity 100ms ease;
   -webkit-tap-highlight-color: transparent;
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    inset 0 0 0 4px rgba(255, 230, 163, 0.12),
+    0 3px 0 var(--pixel-ink);
+}
+
+.buttonFlash {
+  position: absolute;
+  inset: -30%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 35%, rgba(255, 255, 255, 0.92) 45%, rgba(255, 230, 163, 0.88) 52%, transparent 64%),
+    radial-gradient(circle at 50% 50%, rgba(255, 230, 163, 0.42), transparent 58%);
+  mix-blend-mode: screen;
+  animation: buttonLevelFlash 135ms steps(2, end) forwards;
+}
+
+.retryButton > :not(.buttonFlash),
+.prestigeButton > :not(.buttonFlash),
+.secondaryButton > :not(.buttonFlash),
+.dangerButton > :not(.buttonFlash),
+.buyButton > :not(.buttonFlash),
+.iconButton > :not(.buttonFlash),
+.toggleButton > :not(.buttonFlash) {
+  position: relative;
+  z-index: 1;
 }
 
 .retryButton:active,
@@ -539,8 +771,15 @@
 }
 
 .retryButton {
-  background: linear-gradient(135deg, #dc2626, #f97316);
-  box-shadow: 0 10px 28px rgba(220, 38, 38, 0.25);
+  width: min(300px, 70%);
+  justify-self: center;
+  min-height: 40px;
+  margin: 4px 0 8px;
+  z-index: 7;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #153c8d, #07194a);
+  font-size: 0.9rem;
 }
 
 .upgradePanel {
@@ -548,35 +787,50 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
-  padding: 9px 10px calc(10px + var(--safe-bottom));
-  border-top: 1px solid rgba(255, 255, 255, 0.09);
-  background: linear-gradient(180deg, rgba(12, 10, 16, 0.92), rgba(10, 10, 13, 0.98));
+  overflow: hidden;
+  padding: 8px 8px calc(8px + var(--safe-bottom));
+  border-top: 3px solid var(--pixel-gold);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+    linear-gradient(180deg, #06163d, #020817);
+  box-shadow: 0 -3px 0 var(--pixel-ink);
+}
+
+.offlineSlot {
+  min-height: 0;
 }
 
 .tabBar {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 5px;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
 .tabButton {
   min-width: 0;
-  min-height: 46px;
+  min-height: 48px;
   display: grid;
   place-items: center;
   gap: 2px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.055);
-  color: #a8a29e;
-  font-size: 0.64rem;
-  font-weight: 800;
+  border: 3px solid var(--pixel-gold);
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #09215a, #041235);
+  color: #dac9a3;
+  font-size: 0.62rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
   cursor: pointer;
   transition:
     color 120ms ease,
     background 120ms ease,
     border-color 120ms ease;
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    0 3px 0 var(--pixel-ink);
 }
 
 .tabButton span {
@@ -587,19 +841,24 @@
 }
 
 .tabActive {
-  border-color: rgba(251, 191, 36, 0.36);
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.16), rgba(248, 113, 113, 0.08));
-  color: #fef3c7;
+  border-color: var(--pixel-gold-light);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #15439a, #09215a);
+  color: var(--pixel-white);
 }
 
 .tabContent {
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: grid;
   align-content: start;
   gap: 8px;
-  padding-right: 2px;
+  padding: 2px 2px max(14px, var(--safe-bottom)) 0;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .upgradeCard,
@@ -608,11 +867,15 @@
 .settingsActions,
 .prestigePanel {
   position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.082), rgba(255, 255, 255, 0.035));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: visible;
+  border: 3px solid var(--pixel-gold);
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%),
+    linear-gradient(180deg, #09215a, #041235);
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    0 3px 0 var(--pixel-ink);
 }
 
 .upgradeCard,
@@ -638,21 +901,25 @@
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #a8a29e;
-  font-size: 0.68rem;
+  color: var(--pixel-gold-light);
+  font-size: 0.72rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0;
+  text-shadow: 2px 2px 0 #070707;
 }
 
 .upgradeCard h2,
 .skillCard h2,
 .prestigePanel h2 {
   margin: 0 0 4px;
-  color: #fff7ed;
-  font-size: 1rem;
+  color: var(--pixel-white);
+  font-size: 1.08rem;
   line-height: 1.15;
   letter-spacing: 0;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
+  overflow-wrap: anywhere;
 }
 
 .upgradeCard span,
@@ -660,15 +927,25 @@
 .infoCard span,
 .prestigePanel span,
 .prestigePanel p {
-  color: #d6d3d1;
+  display: block;
+  max-width: 100%;
+  color: #f4dfb6;
   font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.25;
+  text-shadow: 1px 1px 0 #070707;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .buyButton {
   min-width: 98px;
   padding: 0 12px;
-  background: linear-gradient(135deg, #9f1239, #f97316);
-  box-shadow: 0 8px 22px rgba(249, 115, 22, 0.16);
+  touch-action: none;
+  user-select: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #153c8d, #07194a);
 }
 
 .lockedCard {
@@ -688,12 +965,15 @@
 .iconButton {
   min-width: 42px;
   padding: 0 10px;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  touch-action: none;
+  user-select: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #09215a, #041235);
 }
 
 .iconButton span {
-  color: #fff7ed;
+  color: var(--pixel-white);
   font-weight: 900;
 }
 
@@ -729,37 +1009,54 @@
 
 .prestigePanel {
   display: grid;
-  place-items: center;
-  gap: 8px;
-  padding: 22px 16px;
-  text-align: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 92px;
+  padding: 10px 12px;
+  text-align: left;
 }
 
 .prestigePanel p {
-  max-width: 34ch;
+  max-width: 42ch;
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.25;
+}
+
+.prestigeSummary {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
 }
 
 .prestigePanel svg {
-  color: #67e8f9;
+  color: #8ec5ff;
+  filter: drop-shadow(2px 2px 0 #070707);
 }
 
 .prestigeButton {
-  width: 100%;
-  margin-top: 4px;
-  background: linear-gradient(135deg, #0891b2, #7c3aed);
+  min-width: 124px;
+  margin-top: 0;
+  padding: 0 10px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #164aa7, #08215c);
 }
 
 .infoCard {
   display: grid;
   gap: 5px;
+  min-width: 0;
   padding: 13px;
 }
 
 .infoCard strong {
-  color: #fff7ed;
-  font-size: 0.92rem;
+  color: var(--pixel-white);
+  font-size: 0.98rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
+  overflow-wrap: anywhere;
 }
 
 .settingsActions {
@@ -769,42 +1066,68 @@
   padding: 10px;
 }
 
+.settingsActions button,
+.infoCard .toggleButton {
+  width: 100%;
+  min-width: 0;
+}
+
 .secondaryButton {
-  background: linear-gradient(135deg, #0f766e, #2563eb);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #11606d, #082b4f);
 }
 
 .dangerButton {
-  background: linear-gradient(135deg, #991b1b, #7f1d1d);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #8a1f22, #431014);
 }
 
 .toggleButton {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #09215a, #041235);
 }
 
 .toggleActive {
-  border-color: rgba(103, 232, 249, 0.36);
-  background: linear-gradient(135deg, rgba(8, 145, 178, 0.7), rgba(124, 58, 237, 0.55));
+  border-color: var(--pixel-gold-light);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
+    linear-gradient(180deg, #164aa7, #08215c);
 }
 
 .offlineToast {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  top: 112px;
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
   z-index: 10;
-  min-height: 42px;
+  min-height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border: 1px solid rgba(250, 204, 21, 0.28);
-  border-radius: 8px;
-  background: rgba(38, 31, 20, 0.96);
-  color: #fef3c7;
+  gap: 12px;
+  margin: 8px 34px 6px;
+  border: 3px solid var(--pixel-gold);
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #09215a, #041235);
+  color: var(--pixel-white);
   font-weight: 900;
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.32);
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #070707;
+  box-shadow:
+    inset 0 0 0 2px var(--pixel-ink),
+    0 3px 0 var(--pixel-ink),
+    0 14px 38px rgba(0, 0, 0, 0.42);
   cursor: pointer;
+}
+
+.offlineToast svg {
+  color: var(--pixel-gold-light);
+  filter: drop-shadow(2px 2px 0 #070707);
 }
 
 @keyframes emberDrift {
@@ -829,6 +1152,176 @@
   }
   50% {
     transform: translateY(-7px) scale(1.015);
+  }
+}
+
+@keyframes hitRingPop {
+  0% {
+    opacity: 0.98;
+    transform: translate(-50%, -50%) scale(0.42);
+  }
+  42% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.72);
+  }
+}
+
+@keyframes monsterHitBounce {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  14% {
+    transform: translateX(-9px) translateY(9px) scale(1.16, 0.76) rotate(-2deg);
+    filter: brightness(1.65) saturate(1.45);
+  }
+  34% {
+    transform: translateX(8px) translateY(-12px) scale(0.86, 1.18) rotate(2deg);
+  }
+  58% {
+    transform: translateX(-3px) translateY(4px) scale(1.07, 0.94) rotate(-0.6deg);
+  }
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes monsterCritBounce {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+  13% {
+    transform: translateX(13px) translateY(13px) scale(1.26, 0.68) rotate(3deg);
+    filter: brightness(2.05) saturate(1.8);
+  }
+  34% {
+    transform: translateX(-12px) translateY(-18px) scale(0.78, 1.28) rotate(-3deg);
+  }
+  62% {
+    transform: translateX(4px) translateY(5px) scale(1.1, 0.9) rotate(0.8deg);
+  }
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes monsterKillBounce {
+  0% {
+    transform: translateY(12px) scale(1.25, 0.66);
+    filter: brightness(2.2) saturate(1.8);
+  }
+  42% {
+    transform: translateY(-20px) scale(0.82, 1.28) rotate(-2deg);
+  }
+  72% {
+    transform: translateY(5px) scale(1.08, 0.92) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes heroFrame0 {
+  0%,
+  24.99% {
+    opacity: 1;
+  }
+  25%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes heroFrame1 {
+  0%,
+  24.99%,
+  50%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  49.99% {
+    opacity: 1;
+  }
+}
+
+@keyframes heroFrame2 {
+  0%,
+  49.99%,
+  75%,
+  100% {
+    opacity: 0;
+  }
+  50%,
+  74.99% {
+    opacity: 1;
+  }
+}
+
+@keyframes heroFrame3 {
+  0%,
+  74.99% {
+    opacity: 0;
+  }
+  75%,
+  99.99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes heroStrike {
+  0%,
+  42%,
+  100% {
+    opacity: 0;
+    transform: rotate(var(--strike-angle)) scaleX(0);
+  }
+  52% {
+    opacity: 0.95;
+    transform: rotate(var(--strike-angle)) scaleX(1);
+  }
+  64% {
+    opacity: 0;
+    transform: rotate(var(--strike-angle)) scaleX(0.25);
+  }
+}
+
+@keyframes archerProjectile {
+  0%,
+  48%,
+  100% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  76% {
+    opacity: 0;
+    transform: translateX(-118px);
+  }
+}
+
+@keyframes buttonLevelFlash {
+  0% {
+    opacity: 1;
+    transform: translateX(-18%) skewX(-12deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24%) skewX(-12deg) scale(1.06);
   }
 }
 
@@ -872,18 +1365,89 @@
 
 @media (min-width: 760px) {
   .gameFrame {
-    height: min(920px, 100dvh);
-    min-height: 720px;
     border-inline: 1px solid rgba(255, 255, 255, 0.08);
   }
 }
 
-@media (max-width: 390px) {
-  .gameFrame {
-    grid-template-rows: auto minmax(270px, 1fr) minmax(260px, 40vh);
-    min-height: 620px;
+@media (max-width: 560px), (max-height: 720px) {
+  .arena {
+    padding: 6px 7px 8px;
   }
 
+  .stageStrip {
+    padding: 7px 8px;
+  }
+
+  .hpHeader,
+  .timerRow {
+    min-height: 34px;
+    padding-inline: 9px;
+    font-size: 0.82rem;
+  }
+
+  .hpBar {
+    height: 14px;
+    margin: 0 9px 7px;
+  }
+
+  .retryButton {
+    width: min(250px, 64%);
+    min-height: 34px;
+    margin: 3px 0 6px;
+    font-size: 0.72rem;
+  }
+
+  .bossButton .monsterImpact,
+  .monsterImpact {
+    width: min(62%, 238px);
+  }
+
+  .upgradePanel {
+    padding: 7px 7px calc(7px + var(--safe-bottom));
+  }
+
+  .tabButton {
+    min-height: 42px;
+    font-size: 0.54rem;
+  }
+
+  .upgradeCard,
+  .skillCard {
+    min-height: 64px;
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .upgradeCard h2,
+  .skillCard h2,
+  .prestigePanel h2 {
+    font-size: 0.88rem;
+  }
+
+  .upgradeCard span,
+  .skillCard span,
+  .infoCard span,
+  .prestigePanel span,
+  .prestigePanel p {
+    font-size: 0.68rem;
+  }
+
+  .prestigePanel {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    min-height: 104px;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .prestigeButton {
+    grid-column: 1 / -1;
+    min-height: 36px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
   .statGrid span {
     font-size: 0.64rem;
   }
@@ -902,6 +1466,25 @@
   .skillCard {
     gap: 8px;
     padding: 10px;
+  }
+
+  .heroUnit {
+    width: 78px;
+    height: 54px;
+  }
+
+  .heroSlot_iron_warden {
+    width: 82px;
+    height: 58px;
+  }
+
+  .monsterImpact {
+    width: min(70%, 260px);
+  }
+
+  .offlineToast {
+    margin-inline: 12px;
+    font-size: 0.72rem;
   }
 }
 

@@ -221,13 +221,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   upgradePlayer: () => {
     const snapshot = get();
+    const freeUpgrades = snapshot.settings.developerMode;
     const cost = getPlayerUpgradeCost(snapshot.playerLevel);
-    if (snapshot.gold < cost) {
+    if (!freeUpgrades && snapshot.gold < cost) {
       return false;
     }
 
     set({
-      gold: snapshot.gold - cost,
+      gold: freeUpgrades ? snapshot.gold : snapshot.gold - cost,
       playerLevel: snapshot.playerLevel + 1,
     });
     return true;
@@ -235,6 +236,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   upgradeHero: (heroId) => {
     const snapshot = get();
+    const freeUpgrades = snapshot.settings.developerMode;
     const hero = HEROES.find((entry) => entry.id === heroId);
     if (!hero || snapshot.highestStage < hero.unlockStage) {
       return false;
@@ -242,12 +244,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const level = snapshot.heroLevels[heroId];
     const cost = getHeroUpgradeCost(heroId, level);
-    if (snapshot.gold < cost) {
+    if (!freeUpgrades && snapshot.gold < cost) {
       return false;
     }
 
     set({
-      gold: snapshot.gold - cost,
+      gold: freeUpgrades ? snapshot.gold : snapshot.gold - cost,
       heroLevels: {
         ...snapshot.heroLevels,
         [heroId]: level + 1,
@@ -258,6 +260,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   upgradeSkill: (skillId) => {
     const snapshot = get();
+    const freeUpgrades = snapshot.settings.developerMode;
     const skill = SKILL_BY_ID[skillId];
     if (!skill || snapshot.highestStage < skill.unlockStage) {
       return false;
@@ -265,12 +268,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const level = snapshot.skillState[skillId].level;
     const cost = getSkillUpgradeCost(skillId, level);
-    if (snapshot.gold < cost) {
+    if (!freeUpgrades && snapshot.gold < cost) {
       return false;
     }
 
     set({
-      gold: snapshot.gold - cost,
+      gold: freeUpgrades ? snapshot.gold : snapshot.gold - cost,
       skillState: {
         ...snapshot.skillState,
         [skillId]: {
@@ -307,6 +310,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   upgradePrestige: (upgradeId) => {
     const snapshot = get();
+    const freeUpgrades = snapshot.settings.developerMode;
     const definition = PRESTIGE_UPGRADE_BY_ID[upgradeId];
     if (!definition) {
       return false;
@@ -318,12 +322,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
 
     const cost = getPrestigeUpgradeCost(upgradeId, level);
-    if (snapshot.prestigeShards < cost) {
+    if (!freeUpgrades && snapshot.prestigeShards < cost) {
       return false;
     }
 
     set({
-      prestigeShards: snapshot.prestigeShards - cost,
+      prestigeShards: freeUpgrades ? snapshot.prestigeShards : snapshot.prestigeShards - cost,
       prestigeUpgrades: {
         ...snapshot.prestigeUpgrades,
         [upgradeId]: level + 1,

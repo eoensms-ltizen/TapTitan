@@ -13,8 +13,8 @@ import type {
 export const SAVE_VERSION = 2;
 export const SAVE_KEY = "tap-titan-mvp-save-v1";
 
-export const BASE_TAP_DAMAGE = 4;
-export const PLAYER_DAMAGE_PER_LEVEL = 2.75;
+export const BASE_TAP_DAMAGE = 7;
+export const PLAYER_DAMAGE_PER_LEVEL = 4.25;
 export const PLAYER_UPGRADE_BASE_COST = 15;
 export const PLAYER_UPGRADE_COST_GROWTH = 1.17;
 
@@ -278,5 +278,29 @@ export const MONSTER_VARIANTS: Record<
     accent: "#c084fc",
     shadow: "#581c87",
     eyes: "#f5d0fe",
+  },
+  ember_horn: {
+    name: "Ember Horn",
+    accent: "#f97316",
+    shadow: "#7f1d1d",
+    eyes: "#fde68a",
+  },
+  frost_crag: {
+    name: "Frost Crag",
+    accent: "#67e8f9",
+    shadow: "#0f3b62",
+    eyes: "#e0faff",
+  },
+  moss_golem: {
+    name: "Moss Golem",
+    accent: "#8ccf5f",
+    shadow: "#253528",
+    eyes: "#bef264",
+  },
+  shadow_bat: {
+    name: "Shadow Bat",
+    accent: "#a78bfa",
+    shadow: "#24123f",
+    eyes: "#f0abfc",
   },
 };

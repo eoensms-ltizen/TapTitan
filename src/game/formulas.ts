@@ -23,7 +23,7 @@ import {
 } from "./balance";
 import type { BossPowerId, GameSnapshot, HeroId, Monster, MonsterVariant, PrestigeUpgradeId, SkillId } from "./types";
 
-const VARIANT_IDS = Object.keys(MONSTER_VARIANTS) as MonsterVariant[];
+const MONSTER_SEQUENCE: MonsterVariant[] = ["ember_horn", "frost_crag", "moss_golem", "shadow_bat"];
 
 export function isBossStage(stage: number): boolean {
   return stage > 0 && stage % BOSS_EVERY_STAGE === 0;
@@ -192,7 +192,8 @@ export function createMonster(
   now: number,
   bossTimeLimitMs = BOSS_TIME_LIMIT_MS,
 ): Monster {
-  const variant = VARIANT_IDS[(stage + index + (isBoss ? 2 : 0)) % VARIANT_IDS.length];
+  const sequenceIndex = Math.max(0, stage - 1) + index + (isBoss ? 1 : 0);
+  const variant = MONSTER_SEQUENCE[sequenceIndex % MONSTER_SEQUENCE.length];
   const bossPower = isBoss ? getBossPowerForStage(stage) : null;
   const variantDefinition = MONSTER_VARIANTS[variant];
   const power = bossPower ? BOSS_POWER_BY_ID[bossPower] : null;

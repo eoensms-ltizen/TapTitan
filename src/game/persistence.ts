@@ -23,6 +23,7 @@ const PRESTIGE_UPGRADE_IDS = PRESTIGE_UPGRADES.map((upgrade) => upgrade.id);
 const DEFAULT_SETTINGS: GameSettings = {
   soundEnabled: true,
   hapticsEnabled: true,
+  developerMode: false,
 };
 
 function emptySkillRuntime(): SkillRuntime {
@@ -119,6 +120,10 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
       typeof input.settings?.hapticsEnabled === "boolean"
         ? input.settings.hapticsEnabled
         : fallback.settings.hapticsEnabled,
+    developerMode:
+      typeof input.settings?.developerMode === "boolean"
+        ? input.settings.developerMode
+        : fallback.settings.developerMode,
   };
 
   const nextMonsterId = Math.max(2, Math.floor(Number(input.nextMonsterId) || 2));

@@ -16,7 +16,11 @@ export type MonsterVariant =
   | "bone_knight"
   | "mire_beast"
   | "crystal_wraith"
-  | "rift_ogre";
+  | "rift_ogre"
+  | "ember_horn"
+  | "frost_crag"
+  | "moss_golem"
+  | "shadow_bat";
 
 export interface Monster {
   id: number;
@@ -86,6 +90,7 @@ export interface BossPowerDefinition {
 export interface GameSettings {
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+  developerMode: boolean;
 }
 
 export interface OfflineReport {

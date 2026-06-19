@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Clock,
   Gem,
@@ -39,9 +39,41 @@ import {
 } from "./game/formulas";
 import { formatClock, formatNumber, formatSeconds } from "./game/format";
 import { getBossTimeProgress, getBossTimeRemaining, useGameStore } from "./game/store";
-import type { BossPowerId, CombatReport, HeroId, MonsterVariant, PrestigeUpgradeId, SkillId } from "./game/types";
+import type { CombatReport, HeroId, MonsterVariant, PrestigeUpgradeId, SkillId } from "./game/types";
 import { useGameLoop } from "./hooks/useGameLoop";
 import styles from "./App.module.css";
+import heroEmberSquireFrame0 from "./assets/sprites/hero-motion/ember_squire-frame-0.png";
+import heroEmberSquireFrame1 from "./assets/sprites/hero-motion/ember_squire-frame-1.png";
+import heroEmberSquireFrame2 from "./assets/sprites/hero-motion/ember_squire-frame-2.png";
+import heroEmberSquireFrame3 from "./assets/sprites/hero-motion/ember_squire-frame-3.png";
+import heroIronWardenFrame0 from "./assets/sprites/hero-motion/iron_warden-frame-0.png";
+import heroIronWardenFrame1 from "./assets/sprites/hero-motion/iron_warden-frame-1.png";
+import heroIronWardenFrame2 from "./assets/sprites/hero-motion/iron_warden-frame-2.png";
+import heroIronWardenFrame3 from "./assets/sprites/hero-motion/iron_warden-frame-3.png";
+import heroRuneArcherFrame0 from "./assets/sprites/hero-motion/rune_archer-frame-0.png";
+import heroRuneArcherFrame1 from "./assets/sprites/hero-motion/rune_archer-frame-1.png";
+import heroRuneArcherFrame2 from "./assets/sprites/hero-motion/rune_archer-frame-2-clean.png";
+import heroRuneArcherFrame3 from "./assets/sprites/hero-motion/rune_archer-frame-3.png";
+import heroStarHexerFrame0 from "./assets/sprites/hero-motion/star_hexer-frame-0.png";
+import heroStarHexerFrame1 from "./assets/sprites/hero-motion/star_hexer-frame-1.png";
+import heroStarHexerFrame2 from "./assets/sprites/hero-motion/star_hexer-frame-2.png";
+import heroStarHexerFrame3 from "./assets/sprites/hero-motion/star_hexer-frame-3.png";
+import heroVoidPriestFrame0 from "./assets/sprites/hero-motion/void_priest-frame-0.png";
+import heroVoidPriestFrame1 from "./assets/sprites/hero-motion/void_priest-frame-1.png";
+import heroVoidPriestFrame2 from "./assets/sprites/hero-motion/void_priest-frame-2.png";
+import heroVoidPriestFrame3 from "./assets/sprites/hero-motion/void_priest-frame-3.png";
+import monsterAshImp from "./assets/sprites/monster-ash-imp.png";
+import monsterBoneKnight from "./assets/sprites/monster-bone-knight.png";
+import monsterCrystalWraith from "./assets/sprites/monster-crystal-wraith.png";
+import monsterEmberHorn from "./assets/sprites/monster-ember-horn.png";
+import monsterFrostCrag from "./assets/sprites/monster-frost-crag.png";
+import monsterMireBeast from "./assets/sprites/monster-mire-beast.png";
+import monsterMossGolem from "./assets/sprites/monster-moss-golem.png";
+import monsterRiftOgre from "./assets/sprites/monster-rift-ogre.png";
+import monsterShadowBat from "./assets/sprites/monster-shadow-bat.png";
+import battleCrystalCavern from "./assets/battle-crystal-cavern.png";
+import battleHauntedForest from "./assets/battle-haunted-forest.png";
+import battleLavaRuins from "./assets/battle-lava-ruins.png";
 
 type TabId = "player" | "heroes" | "skills" | "prestige" | "settings";
 
@@ -53,6 +85,8 @@ interface FloatingHit {
   tone: "damage" | "crit" | "gold" | "kill";
 }
 
+type ImpactTone = "damage" | "crit" | "kill";
+
 const tabs: Array<{ id: TabId; label: string; Icon: typeof Swords }> = [
   { id: "player", label: "Player", Icon: Swords },
   { id: "heroes", label: "Heroes", Icon: Users },
@@ -61,69 +95,306 @@ const tabs: Array<{ id: TabId; label: string; Icon: typeof Swords }> = [
   { id: "settings", label: "Settings", Icon: Settings },
 ];
 
-function MonsterGlyph({
+const DRAG_TAP_DISTANCE_PX = 24;
+const MAX_DRAG_TAPS_PER_MOVE = 10;
+const DRAG_UPGRADE_DISTANCE_PX = 18;
+const MAX_DRAG_UPGRADES_PER_MOVE = 12;
+const BASE_HERO_ATTACK_DURATION_MS = 1120;
+const MIN_HERO_ATTACK_DURATION_MS = 620;
+
+const heroSpawnSlots: Record<HeroId, { x: number; y: number }> = {
+  ember_squire: { x: 18, y: 86 },
+  rune_archer: { x: 73, y: 57 },
+  void_priest: { x: 32, y: 85 },
+  iron_warden: { x: 66, y: 86 },
+  star_hexer: { x: 13, y: 59 },
+};
+
+const heroMotionFramesById: Record<HeroId, string[]> = {
+  ember_squire: [heroEmberSquireFrame0, heroEmberSquireFrame1, heroEmberSquireFrame2, heroEmberSquireFrame3],
+  rune_archer: [heroRuneArcherFrame0, heroRuneArcherFrame1, heroRuneArcherFrame2, heroRuneArcherFrame3],
+  void_priest: [heroVoidPriestFrame0, heroVoidPriestFrame1, heroVoidPriestFrame2, heroVoidPriestFrame3],
+  iron_warden: [heroIronWardenFrame0, heroIronWardenFrame1, heroIronWardenFrame2, heroIronWardenFrame3],
+  star_hexer: [heroStarHexerFrame0, heroStarHexerFrame1, heroStarHexerFrame2, heroStarHexerFrame3],
+};
+
+const heroFrameOffsetsById: Record<HeroId, Array<{ x: number; y: number }>> = {
+  ember_squire: [
+    { x: 0, y: 0 },
+    { x: 8.89, y: -11.49 },
+    { x: 14.66, y: -0.82 },
+    { x: 6.62, y: -0.82 },
+  ],
+  rune_archer: [
+    { x: 0, y: 0 },
+    { x: 13.32, y: 20.11 },
+    { x: 24.06, y: 20.11 },
+    { x: 4.72, y: 0 },
+  ],
+  void_priest: [
+    { x: 0, y: 0 },
+    { x: 13.89, y: -1.23 },
+    { x: 17.7, y: -2.05 },
+    { x: 8.66, y: -1.23 },
+  ],
+  iron_warden: [
+    { x: 0, y: 0 },
+    { x: 10.54, y: 0 },
+    { x: 30.09, y: 1.2 },
+    { x: 4.86, y: 0 },
+  ],
+  star_hexer: [
+    { x: 0, y: 0 },
+    { x: 11.68, y: 0 },
+    { x: 15.23, y: -1.23 },
+    { x: 6.65, y: -2.05 },
+  ],
+};
+
+const monsterSpriteByVariant: Record<MonsterVariant, string> = {
+  ash_imp: monsterAshImp,
+  bone_knight: monsterBoneKnight,
+  mire_beast: monsterMireBeast,
+  crystal_wraith: monsterCrystalWraith,
+  rift_ogre: monsterRiftOgre,
+  ember_horn: monsterEmberHorn,
+  frost_crag: monsterFrostCrag,
+  moss_golem: monsterMossGolem,
+  shadow_bat: monsterShadowBat,
+};
+
+const battleBackgrounds = [battleHauntedForest, battleLavaRuins, battleCrystalCavern];
+
+function getBattleBackground(stage: number) {
+  return battleBackgrounds[Math.max(0, stage - 1) % battleBackgrounds.length];
+}
+
+interface DragTapState {
+  pointerId: number;
+  lastClientX: number;
+  lastClientY: number;
+  residuePx: number;
+}
+
+interface DragRepeatState {
+  pointerId: number;
+  lastClientX: number;
+  lastClientY: number;
+  residuePx: number;
+}
+
+function getHeroAttackDurationMs(level: number) {
+  return Math.max(MIN_HERO_ATTACK_DURATION_MS, BASE_HERO_ATTACK_DURATION_MS - Math.max(0, level - 1) * 5);
+}
+
+function DragRepeatButton({
+  className,
+  disabled,
+  onTrigger,
+  dataTestId,
+  title,
+  ariaLabel,
+  children,
+}: {
+  className: string;
+  disabled?: boolean;
+  onTrigger: () => boolean;
+  dataTestId?: string;
+  title?: string;
+  ariaLabel?: string;
+  children: React.ReactNode;
+}) {
+  const dragRepeatRef = useRef<DragRepeatState | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const [flashKey, setFlashKey] = useState(0);
+
+  function triggerUpgrade() {
+    if (disabled) {
+      return false;
+    }
+    const upgraded = onTrigger();
+    if (upgraded) {
+      setFlashKey((value) => value + 1);
+      buttonRef.current?.animate(
+        [
+          { filter: "brightness(2.25) saturate(1.45)" },
+          { filter: "brightness(1.1) saturate(1.08)" },
+          { filter: "brightness(1) saturate(1)" },
+        ],
+        { duration: 115, easing: "steps(2, end)" },
+      );
+    }
+    return upgraded;
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLButtonElement>) {
+    if (disabled || (event.pointerType === "mouse" && event.button !== 0)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRepeatRef.current = {
+      pointerId: event.pointerId,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      residuePx: 0,
+    };
+    triggerUpgrade();
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLButtonElement>) {
+    const dragState = dragRepeatRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    event.preventDefault();
+    const deltaX = event.clientX - dragState.lastClientX;
+    const deltaY = event.clientY - dragState.lastClientY;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance <= 0) {
+      return;
+    }
+
+    const totalDistance = dragState.residuePx + distance;
+    const rawUpgradeCount = Math.floor(totalDistance / DRAG_UPGRADE_DISTANCE_PX);
+    if (rawUpgradeCount <= 0) {
+      dragRepeatRef.current = {
+        ...dragState,
+        lastClientX: event.clientX,
+        lastClientY: event.clientY,
+        residuePx: totalDistance,
+      };
+      return;
+    }
+
+    const upgradeCount = Math.min(rawUpgradeCount, MAX_DRAG_UPGRADES_PER_MOVE);
+    let upgradedAll = true;
+    for (let index = 0; index < upgradeCount; index += 1) {
+      if (!triggerUpgrade()) {
+        upgradedAll = false;
+        break;
+      }
+    }
+
+    dragRepeatRef.current = {
+      pointerId: event.pointerId,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      residuePx:
+        upgradedAll && rawUpgradeCount <= MAX_DRAG_UPGRADES_PER_MOVE
+          ? totalDistance - upgradeCount * DRAG_UPGRADE_DISTANCE_PX
+          : 0,
+    };
+  }
+
+  function clearDragRepeat(event: React.PointerEvent<HTMLButtonElement>) {
+    if (dragRepeatRef.current?.pointerId === event.pointerId) {
+      dragRepeatRef.current = null;
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    event.preventDefault();
+    triggerUpgrade();
+  }
+
+  return (
+    <button
+      ref={buttonRef}
+      className={className}
+      type="button"
+      disabled={disabled}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={clearDragRepeat}
+      onPointerCancel={clearDragRepeat}
+      onLostPointerCapture={clearDragRepeat}
+      onKeyDown={handleKeyDown}
+      data-testid={dataTestId}
+      title={title}
+      aria-label={ariaLabel}
+    >
+      {flashKey > 0 && <span key={flashKey} className={styles.buttonFlash} />}
+      {children}
+    </button>
+  );
+}
+
+function HeroUnit({
+  hero,
+  level,
+  dps,
+  index,
+}: {
+  hero: (typeof HEROES)[number];
+  level: number;
+  dps: number;
+  index: number;
+}) {
+  const slot = heroSpawnSlots[hero.id];
+  const attackDurationMs = getHeroAttackDurationMs(level);
+  const attackDelay = `${Math.round(index * attackDurationMs * -0.18)}ms`;
+  const frameOffsets = heroFrameOffsetsById[hero.id];
+  const flipped = hero.id === "rune_archer" || hero.id === "iron_warden";
+
+  return (
+    <div
+      className={`${styles.heroUnit} ${styles[`heroSlot_${hero.id}`]}`}
+      style={{
+        left: `${slot.x}%`,
+        top: `${slot.y}%`,
+        color: hero.accent,
+        "--hero-attack-duration": `${attackDurationMs}ms`,
+        "--hero-facing": flipped ? "-1" : "1",
+        "--hero-flip-offset": flipped ? "100%" : "0%",
+      } as React.CSSProperties}
+      aria-label={`${hero.name} level ${level}, ${formatNumber(dps)} DPS`}
+    >
+      <span className={styles.heroSprite} aria-hidden="true">
+        {heroMotionFramesById[hero.id].map((frameSrc, frameIndex) => (
+          <img
+            key={frameSrc}
+            className={`${styles.heroFrame} ${styles[`heroFrame_${frameIndex}`]}`}
+            src={frameSrc}
+            alt=""
+            draggable={false}
+            style={{
+              animationDelay: attackDelay,
+              transform: `translate(${frameOffsets[frameIndex].x * (flipped ? -1 : 1)}%, ${frameOffsets[frameIndex].y}%)`,
+            }}
+          />
+        ))}
+      </span>
+      <span className={styles.heroWeapon} />
+      {hero.id === "rune_archer" && <span className={styles.heroProjectile} style={{ animationDelay: attackDelay }} />}
+      <span className={styles.heroStrike} style={{ animationDelay: attackDelay }} />
+    </div>
+  );
+}
+
+function MonsterSprite({
   variant,
   isBoss,
-  bossPower,
 }: {
   variant: MonsterVariant;
   isBoss: boolean;
-  bossPower: BossPowerId | null;
 }) {
-  const variantClass = styles[`monster_${variant}`];
-  const bossPowerClass = bossPower ? styles[`bossPower_${bossPower}`] : "";
   return (
-    <svg
-      className={`${styles.monsterSvg} ${variantClass} ${bossPowerClass} ${isBoss ? styles.bossSvg : ""}`}
-      viewBox="0 0 220 220"
-      role="img"
-      aria-label={isBoss ? "Boss monster" : "Monster"}
-    >
-      <defs>
-        <filter id="monsterGlow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="5" result="blur" />
-          <feColorMatrix
-            in="blur"
-            type="matrix"
-            values="1 0 0 0 0.9 0 1 0 0 0.45 0 0 1 0 0.2 0 0 0 0.55 0"
-          />
-          <feMerge>
-            <feMergeNode />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <linearGradient id="bodyGradient" x1="0%" x2="100%" y1="0%" y2="100%">
-          <stop offset="0%" stopColor="var(--monster-accent)" />
-          <stop offset="55%" stopColor="var(--monster-core)" />
-          <stop offset="100%" stopColor="var(--monster-shadow)" />
-        </linearGradient>
-      </defs>
-      <ellipse className={styles.monsterShadow} cx="110" cy="190" rx="72" ry="13" />
-      {isBoss && (
-        <>
-          <path
-            className={styles.monsterAura}
-            d="M110 13 L132 58 L181 38 L160 88 L210 112 L158 130 L176 184 L127 157 L110 211 L93 157 L44 184 L62 130 L10 112 L60 88 L39 38 L88 58 Z"
-          />
-          <circle className={styles.bossSigil} cx="110" cy="115" r="58" />
-          <path className={styles.bossSigilMark} d="M110 62 L132 116 L110 168 L88 116 Z" />
-        </>
-      )}
-      <path className={styles.monsterHorn} d="M67 78 C30 52 29 25 42 15 C58 35 78 48 83 77 Z" />
-      <path className={styles.monsterHorn} d="M153 78 C190 52 191 25 178 15 C162 35 142 48 137 77 Z" />
-      <path
-        className={styles.monsterBody}
-        d="M57 102 C57 60 86 38 110 38 C139 38 163 63 163 103 C181 117 187 145 171 169 C152 197 70 198 50 168 C36 146 40 117 57 102 Z"
-      />
-      <path className={styles.monsterBrow} d="M68 102 C84 89 98 88 108 96" />
-      <path className={styles.monsterBrow} d="M152 102 C136 89 122 88 112 96" />
-      <circle className={styles.monsterEye} cx="84" cy="111" r={isBoss ? 10 : 8} />
-      <circle className={styles.monsterEye} cx="136" cy="111" r={isBoss ? 10 : 8} />
-      <path className={styles.monsterMouth} d="M79 146 C96 160 124 160 141 146" />
-      <path className={styles.monsterFang} d="M93 150 L99 170 L106 151" />
-      <path className={styles.monsterFang} d="M126 151 L133 170 L139 150" />
-      <path className={styles.monsterScar} d="M118 67 L101 90 L119 86 L105 112" />
-    </svg>
+    <img
+      className={`${styles.monsterSprite} ${isBoss ? styles.bossSprite : ""}`}
+      src={monsterSpriteByVariant[variant]}
+      alt={isBoss ? "Boss monster" : "Monster"}
+      draggable={false}
+    />
   );
 }
 
@@ -155,6 +426,8 @@ function Arena() {
   const retryBoss = useGameStore((state) => state.retryBoss);
   const [floaters, setFloaters] = useState<FloatingHit[]>([]);
   const [hitPulse, setHitPulse] = useState(0);
+  const [impactTone, setImpactTone] = useState<ImpactTone>("damage");
+  const dragTapRef = useRef<DragTapState | null>(null);
   const now = Date.now();
   const hpPercent = Math.max(0, Math.min(100, (snapshot.monster.hp / snapshot.monster.maxHp) * 100));
   const bossTime = getBossTimeRemaining(snapshot, now);
@@ -163,6 +436,12 @@ function Arena() {
   const bossPower = snapshot.monster.bossPower ? BOSS_POWER_BY_ID[snapshot.monster.bossPower] : null;
   const stageProgress = getStageProgress(snapshot) * 100;
   const canRetryBoss = isBossStage(snapshot.stage) && snapshot.bossFailed && !snapshot.monster.isBoss;
+  const activeHeroes = HEROES.map((hero) => ({
+    hero,
+    level: snapshot.heroLevels[hero.id],
+    dps: getHeroDps(hero.id, snapshot.heroLevels[hero.id]),
+  })).filter(({ level }) => level > 0);
+  const battleBackground = getBattleBackground(snapshot.stage);
 
   function addFloater(entry: Omit<FloatingHit, "id">) {
     const id = Date.now() + Math.random();
@@ -198,16 +477,93 @@ function Arena() {
     emitFeedback(report.killed ? "kill" : report.critical ? "crit" : "tap", snapshot.settings);
   }
 
-  function handleTap(event: React.PointerEvent<HTMLButtonElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
+  function getHitPoint(target: HTMLButtonElement, clientX: number, clientY: number): { x: number; y: number } {
+    const rect = target.getBoundingClientRect();
+    const x = Math.max(4, Math.min(96, ((clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(5, Math.min(95, ((clientY - rect.top) / rect.height) * 100));
+    return { x, y };
+  }
+
+  function attackAt(target: HTMLButtonElement, clientX: number, clientY: number) {
+    const { x, y } = getHitPoint(target, clientX, clientY);
     const report = tapMonster();
     if (!report) {
       return;
     }
     setHitPulse((value) => value + 1);
+    setImpactTone(report.killed ? "kill" : report.critical ? "crit" : "damage");
     handleCombatReport(report, x, y);
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLButtonElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragTapRef.current = {
+      pointerId: event.pointerId,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      residuePx: 0,
+    };
+    attackAt(event.currentTarget, event.clientX, event.clientY);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLButtonElement>) {
+    const dragState = dragTapRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    event.preventDefault();
+    const deltaX = event.clientX - dragState.lastClientX;
+    const deltaY = event.clientY - dragState.lastClientY;
+    const distance = Math.hypot(deltaX, deltaY);
+    if (distance <= 0) {
+      return;
+    }
+
+    const totalDistance = dragState.residuePx + distance;
+    const rawTapCount = Math.floor(totalDistance / DRAG_TAP_DISTANCE_PX);
+    if (rawTapCount <= 0) {
+      dragTapRef.current = {
+        ...dragState,
+        lastClientX: event.clientX,
+        lastClientY: event.clientY,
+        residuePx: totalDistance,
+      };
+      return;
+    }
+
+    const tapCount = Math.min(rawTapCount, MAX_DRAG_TAPS_PER_MOVE);
+    for (let index = 1; index <= tapCount; index += 1) {
+      const distanceAtTap = index * DRAG_TAP_DISTANCE_PX - dragState.residuePx;
+      const progress = Math.max(0, Math.min(1, distanceAtTap / distance));
+      attackAt(
+        event.currentTarget,
+        dragState.lastClientX + deltaX * progress,
+        dragState.lastClientY + deltaY * progress,
+      );
+    }
+
+    dragTapRef.current = {
+      pointerId: event.pointerId,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      residuePx: rawTapCount > MAX_DRAG_TAPS_PER_MOVE ? 0 : totalDistance - tapCount * DRAG_TAP_DISTANCE_PX,
+    };
+  }
+
+  function clearDragTap(event: React.PointerEvent<HTMLButtonElement>) {
+    if (dragTapRef.current?.pointerId === event.pointerId) {
+      dragTapRef.current = null;
+    }
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
   }
 
   return (
@@ -262,19 +618,29 @@ function Arena() {
         )}
 
         <button
-          key={`${snapshot.monster.id}-${hitPulse}`}
           className={`${styles.monsterButton} ${snapshot.monster.isBoss ? styles.bossButton : ""}`}
-          onPointerDown={handleTap}
+          style={{ "--battle-background": `url(${battleBackground})` } as React.CSSProperties}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={clearDragTap}
+          onPointerCancel={clearDragTap}
+          onLostPointerCapture={clearDragTap}
           type="button"
           data-testid="attack-monster"
           aria-label="Attack monster"
         >
-          <div className={styles.hitRing} />
-          <MonsterGlyph
-            variant={snapshot.monster.variant}
-            isBoss={snapshot.monster.isBoss}
-            bossPower={snapshot.monster.bossPower}
-          />
+          <div key={`ring-${hitPulse}`} className={`${styles.hitRing} ${styles[`hitRing_${impactTone}`] ?? ""}`} />
+          <div className={styles.heroLayer} aria-hidden="true">
+            {activeHeroes.map(({ hero, level, dps }, index) => (
+              <HeroUnit key={hero.id} hero={hero} level={level} dps={dps} index={index} />
+            ))}
+          </div>
+          <div
+            key={`${snapshot.monster.id}-${hitPulse}`}
+            className={`${styles.monsterImpact} ${styles[`monsterImpact_${impactTone}`] ?? ""}`}
+          >
+            <MonsterSprite variant={snapshot.monster.variant} isBoss={snapshot.monster.isBoss} />
+          </div>
           {floaters.map((floater) => (
             <span
               key={floater.id}
@@ -310,12 +676,15 @@ function PlayerTab() {
   const upgradePlayer = useGameStore((state) => state.upgradePlayer);
   const now = Date.now();
   const cost = getPlayerUpgradeCost(snapshot.playerLevel);
+  const displayedCost = snapshot.settings.developerMode ? 0 : cost;
   const tapDamage = getTapDamage(snapshot, now);
 
   function handleUpgradePlayer() {
-    if (upgradePlayer()) {
+    const upgraded = upgradePlayer();
+    if (upgraded) {
       emitFeedback("upgrade", snapshot.settings);
     }
+    return upgraded;
   }
 
   return (
@@ -326,16 +695,15 @@ function PlayerTab() {
           <h2>Player Strike Lv.{snapshot.playerLevel}</h2>
           <span>Tap damage {formatNumber(tapDamage)}</span>
         </div>
-        <button
+        <DragRepeatButton
           className={styles.buyButton}
-          type="button"
-          disabled={snapshot.gold < cost}
-          onClick={handleUpgradePlayer}
-          data-testid="upgrade-player"
+          disabled={!snapshot.settings.developerMode && snapshot.gold < cost}
+          onTrigger={handleUpgradePlayer}
+          dataTestId="upgrade-player"
         >
           <Swords size={18} />
-          {formatNumber(cost)}
-        </button>
+          {formatNumber(displayedCost)}
+        </DragRepeatButton>
       </article>
       <article className={styles.infoCard}>
         <strong>Prestige Bonus</strong>
@@ -348,11 +716,14 @@ function PlayerTab() {
 function HeroesTab() {
   const snapshot = useGameStore();
   const upgradeHero = useGameStore((state) => state.upgradeHero);
+  const freeUpgrades = snapshot.settings.developerMode;
 
   function handleUpgradeHero(heroId: HeroId) {
-    if (upgradeHero(heroId)) {
+    const upgraded = upgradeHero(heroId);
+    if (upgraded) {
       emitFeedback("upgrade", snapshot.settings);
     }
+    return upgraded;
   }
 
   return (
@@ -360,6 +731,7 @@ function HeroesTab() {
       {HEROES.map((hero) => {
         const level = snapshot.heroLevels[hero.id];
         const cost = getHeroUpgradeCost(hero.id, level);
+        const displayedCost = freeUpgrades ? 0 : cost;
         const locked = snapshot.highestStage < hero.unlockStage;
         const dps = getHeroDps(hero.id, level);
         const milestone = getHeroMilestone(level);
@@ -381,16 +753,15 @@ function HeroesTab() {
                 <span style={{ width: `${milestone.progress * 100}%` }} />
               </div>
             </div>
-            <button
+            <DragRepeatButton
               className={styles.buyButton}
-              type="button"
-              disabled={locked || snapshot.gold < cost}
-              onClick={() => handleUpgradeHero(hero.id as HeroId)}
-              data-testid={`upgrade-hero-${hero.id}`}
+              disabled={locked || (!freeUpgrades && snapshot.gold < cost)}
+              onTrigger={() => handleUpgradeHero(hero.id as HeroId)}
+              dataTestId={`upgrade-hero-${hero.id}`}
             >
               <Users size={18} />
-              {formatNumber(cost)}
-            </button>
+              {formatNumber(displayedCost)}
+            </DragRepeatButton>
           </article>
         );
       })}
@@ -403,11 +774,14 @@ function SkillsTab() {
   const upgradeSkill = useGameStore((state) => state.upgradeSkill);
   const activateSkill = useGameStore((state) => state.activateSkill);
   const now = Date.now();
+  const freeUpgrades = snapshot.settings.developerMode;
 
   function handleUpgradeSkill(skillId: SkillId) {
-    if (upgradeSkill(skillId)) {
+    const upgraded = upgradeSkill(skillId);
+    if (upgraded) {
       emitFeedback("upgrade", snapshot.settings);
     }
+    return upgraded;
   }
 
   function handleActivateSkill(skillId: SkillId) {
@@ -421,6 +795,7 @@ function SkillsTab() {
       {SKILLS.map((skill) => {
         const runtime = snapshot.skillState[skill.id];
         const cost = getSkillUpgradeCost(skill.id, runtime.level);
+        const displayedCost = freeUpgrades ? 0 : cost;
         const locked = snapshot.highestStage < skill.unlockStage;
         const active = isSkillActive(snapshot, skill.id, now);
         const activeMs = getSkillRemainingMs(snapshot, skill.id, now);
@@ -442,18 +817,17 @@ function SkillsTab() {
               </span>
             </div>
             <div className={styles.skillActions}>
-              <button
+              <DragRepeatButton
                 className={styles.iconButton}
-                type="button"
-                disabled={locked || snapshot.gold < cost}
-                onClick={() => handleUpgradeSkill(skill.id as SkillId)}
-                data-testid={`upgrade-skill-${skill.id}`}
+                disabled={locked || (!freeUpgrades && snapshot.gold < cost)}
+                onTrigger={() => handleUpgradeSkill(skill.id as SkillId)}
+                dataTestId={`upgrade-skill-${skill.id}`}
                 title="Upgrade skill"
-                aria-label={`Upgrade ${skill.name}`}
+                ariaLabel={`Upgrade ${skill.name}`}
               >
                 <HandCoins size={17} />
-                <span>{formatNumber(cost)}</span>
-              </button>
+                <span>{formatNumber(displayedCost)}</span>
+              </DragRepeatButton>
               <button
                 className={styles.iconButton}
                 type="button"
@@ -479,6 +853,7 @@ function PrestigeTab() {
   const upgradePrestige = useGameStore((state) => state.upgradePrestige);
   const reward = getPrestigeReward(snapshot.highestStage);
   const canPrestige = snapshot.highestStage >= MIN_PRESTIGE_STAGE && reward > 0;
+  const freeUpgrades = snapshot.settings.developerMode;
 
   function handlePrestige() {
     if (prestige()) {
@@ -487,9 +862,11 @@ function PrestigeTab() {
   }
 
   function handleUpgradePrestige(upgradeId: PrestigeUpgradeId) {
-    if (upgradePrestige(upgradeId)) {
+    const upgraded = upgradePrestige(upgradeId);
+    if (upgraded) {
       emitFeedback("upgrade", snapshot.settings);
     }
+    return upgraded;
   }
 
   function getBonusLabel(upgradeId: PrestigeUpgradeId, level: number) {
@@ -504,14 +881,16 @@ function PrestigeTab() {
     <div className={styles.tabContent}>
       <article className={styles.prestigePanel}>
         <Gem size={32} />
-        <h2>Relic Shards {formatNumber(snapshot.prestigeShards)}</h2>
-        <span>
-          Total {formatNumber(snapshot.lifetimePrestigeShards)} / Damage x
-          {getPermanentDamageMultiplier(snapshot).toFixed(2)}
-        </span>
-        <p>
-          Reach stage {MIN_PRESTIGE_STAGE} to reset progress and gain permanent damage.
-        </p>
+        <div className={styles.prestigeSummary}>
+          <h2>Relic Shards {formatNumber(snapshot.prestigeShards)}</h2>
+          <span>
+            Total {formatNumber(snapshot.lifetimePrestigeShards)} / Damage x
+            {getPermanentDamageMultiplier(snapshot).toFixed(2)}
+          </span>
+          <p>
+            Best stage {MIN_PRESTIGE_STAGE}+ unlocks reset rewards. Dev costs are 0.
+          </p>
+        </div>
         <button
           className={styles.prestigeButton}
           type="button"
@@ -527,6 +906,7 @@ function PrestigeTab() {
       {PRESTIGE_UPGRADES.map((upgrade) => {
         const level = snapshot.prestigeUpgrades[upgrade.id];
         const cost = getPrestigeUpgradeCost(upgrade.id, level);
+        const displayedCost = freeUpgrades ? 0 : cost;
         const capped = level >= upgrade.maxLevel;
         return (
           <article className={styles.upgradeCard} key={upgrade.id}>
@@ -538,16 +918,15 @@ function PrestigeTab() {
               </h2>
               <span>{getBonusLabel(upgrade.id, level)}</span>
             </div>
-            <button
+            <DragRepeatButton
               className={styles.buyButton}
-              type="button"
-              disabled={capped || snapshot.prestigeShards < cost}
-              onClick={() => handleUpgradePrestige(upgrade.id)}
-              data-testid={`upgrade-prestige-${upgrade.id}`}
+              disabled={capped || (!freeUpgrades && snapshot.prestigeShards < cost)}
+              onTrigger={() => handleUpgradePrestige(upgrade.id)}
+              dataTestId={`upgrade-prestige-${upgrade.id}`}
             >
               <Gem size={18} />
-              {capped ? "Max" : formatNumber(cost)}
-            </button>
+              {capped ? "Max" : formatNumber(displayedCost)}
+            </DragRepeatButton>
           </article>
         );
       })}
@@ -603,6 +982,19 @@ function SettingsTab() {
         >
           <Vibrate size={18} />
           Haptics
+        </button>
+      </article>
+      <article className={styles.infoCard}>
+        <strong>Developer Mode</strong>
+        <span>Upgrade and prestige costs become 0. Unlock stages still apply.</span>
+        <button
+          className={`${styles.toggleButton} ${snapshot.settings.developerMode ? styles.toggleActive : ""}`}
+          type="button"
+          onClick={() => updateSettings({ developerMode: !snapshot.settings.developerMode })}
+          data-testid="toggle-developer-mode"
+        >
+          <Zap size={18} />
+          {snapshot.settings.developerMode ? "Dev On" : "Dev Off"}
         </button>
       </article>
       <article className={styles.settingsActions}>
@@ -689,9 +1081,11 @@ export default function App() {
       </div>
       <div className={styles.gameFrame}>
         <TopBar />
+        <div className={styles.offlineSlot}>
+          <OfflineRewardToast />
+        </div>
         <Arena />
         <UpgradePanel />
-        <OfflineRewardToast />
       </div>
     </div>
   );
