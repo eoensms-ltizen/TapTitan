@@ -62,14 +62,14 @@ import heroVoidPriestFrame0 from "./assets/sprites/hero-motion/void_priest-frame
 import heroVoidPriestFrame1 from "./assets/sprites/hero-motion/void_priest-frame-1.png";
 import heroVoidPriestFrame2 from "./assets/sprites/hero-motion/void_priest-frame-2.png";
 import heroVoidPriestFrame3 from "./assets/sprites/hero-motion/void_priest-frame-3.png";
-import monsterAshImp from "./assets/sprites/monster-ash-imp-v2.png";
-import monsterBoneKnight from "./assets/sprites/monster-bone-knight-v2.png";
-import monsterCrystalWraith from "./assets/sprites/monster-crystal-wraith-v2.png";
-import monsterMireBeast from "./assets/sprites/monster-mire-beast-v2.png";
-import monsterRiftOgre from "./assets/sprites/monster-rift-ogre-v2.png";
-import battleCavern from "./assets/battle-cavern-v2.png";
-import battleCrystalGrove from "./assets/battle-crystal-grove-v2.png";
-import battleLava from "./assets/battle-lava-v2.png";
+import monsterAshImp from "./assets/sprites/monster-ash-imp-prepared.png";
+import monsterBoneKnight from "./assets/sprites/monster-bone-knight-prepared.png";
+import monsterCrystalWraith from "./assets/sprites/monster-crystal-wraith-prepared.png";
+import monsterMireBeast from "./assets/sprites/monster-mire-beast-prepared.png";
+import monsterRiftOgre from "./assets/sprites/monster-rift-ogre-prepared.png";
+import battleCavern from "./assets/battle-cavern-prepared.png";
+import battleCrystalGrove from "./assets/battle-grove-prepared.png";
+import battleLava from "./assets/battle-lava-prepared.png";
 
 type TabId = "player" | "heroes" | "skills" | "prestige" | "settings";
 

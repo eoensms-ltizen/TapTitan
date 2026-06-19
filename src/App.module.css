@@ -321,7 +321,7 @@
 }
 
 .monsterButton {
-  --battle-background: url("./assets/pixel-cave-battlefield.png");
+  --battle-background: url("./assets/battle-cavern-prepared.png");
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
