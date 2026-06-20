@@ -1,6 +1,6 @@
-import { OFFLINE_CAP_SECONDS, PRESTIGE_UPGRADES, SAVE_KEY, SAVE_VERSION } from "./balance";
+import { OFFLINE_CAP_SECONDS, PLAYER_UPGRADES, PRESTIGE_UPGRADES, SAVE_KEY, SAVE_VERSION } from "./balance";
 import { createMonster, getOfflineReward, isBossStage } from "./formulas";
-import type { GameSettings, GameSnapshot, HeroId, PrestigeUpgradeId, SkillId, SkillRuntime } from "./types";
+import type { GameSettings, GameSnapshot, HeroId, PlayerUpgradeId, PrestigeUpgradeId, SkillId, SkillRuntime } from "./types";
 
 type StoredSave = {
   version: number;
@@ -18,6 +18,7 @@ const HERO_IDS: HeroId[] = [
 
 const SKILL_IDS: SkillId[] = ["titan_surge", "gold_pact", "boss_breaker"];
 
+const PLAYER_UPGRADE_IDS = PLAYER_UPGRADES.map((upgrade) => upgrade.id);
 const PRESTIGE_UPGRADE_IDS = PRESTIGE_UPGRADES.map((upgrade) => upgrade.id);
 
 const DEFAULT_SETTINGS: GameSettings = {
@@ -59,11 +60,20 @@ export function createDefaultSnapshot(now = Date.now()): GameSnapshot {
     {} as Record<PrestigeUpgradeId, number>,
   );
 
+  const playerUpgrades = PLAYER_UPGRADE_IDS.reduce(
+    (levels, id) => {
+      levels[id] = 0;
+      return levels;
+    },
+    {} as Record<PlayerUpgradeId, number>,
+  );
+
   return {
     version: SAVE_VERSION,
     gold: 0,
     lifetimeGold: 0,
     playerLevel: 0,
+    playerUpgrades,
     heroLevels,
     skillState,
     stage: 1,
@@ -106,6 +116,11 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
     };
   }
 
+  const playerUpgrades = { ...fallback.playerUpgrades };
+  for (const upgradeId of PLAYER_UPGRADE_IDS) {
+    playerUpgrades[upgradeId] = Math.max(0, Math.floor(Number(input.playerUpgrades?.[upgradeId]) || 0));
+  }
+
   const prestigeUpgrades = { ...fallback.prestigeUpgrades };
   for (const upgradeId of PRESTIGE_UPGRADE_IDS) {
     prestigeUpgrades[upgradeId] = Math.max(0, Math.floor(Number(input.prestigeUpgrades?.[upgradeId]) || 0));
@@ -144,6 +159,7 @@ function sanitizeSnapshot(input: GameSnapshot, now: number): GameSnapshot {
     gold: Math.max(0, Number(input.gold) || 0),
     lifetimeGold: Math.max(0, Number(input.lifetimeGold) || 0),
     playerLevel: Math.max(0, Math.floor(Number(input.playerLevel) || 0)),
+    playerUpgrades,
     heroLevels,
     skillState,
     stage,
@@ -216,8 +232,9 @@ export function saveSnapshot(snapshot: GameSnapshot, now = Date.now()): void {
     return;
   }
 
+  const { combatEvents: _combatEvents, ...snapshotForSave } = snapshot as GameSnapshot & { combatEvents?: unknown };
   const cleanSnapshot: GameSnapshot = {
-    ...snapshot,
+    ...snapshotForSave,
     version: SAVE_VERSION,
     lastSavedAt: now,
     offlineReport: null,

@@ -4,13 +4,15 @@ import type {
   HeroDefinition,
   HeroId,
   MonsterVariant,
+  PlayerUpgradeDefinition,
+  PlayerUpgradeId,
   PrestigeUpgradeDefinition,
   PrestigeUpgradeId,
   SkillDefinition,
   SkillId,
 } from "./types";
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 export const SAVE_KEY = "tap-titan-mvp-save-v1";
 
 export const BASE_TAP_DAMAGE = 7;
@@ -31,6 +33,66 @@ export const PRESTIGE_GOLD_PER_LEVEL = 0.1;
 export const PRESTIGE_BOSS_TIME_PER_LEVEL_MS = 1_500;
 export const CRIT_CHANCE = 0.08;
 export const CRIT_MULTIPLIER = 2.25;
+export const HERO_ATTACK_BASE_MS = 1120;
+export const HERO_ATTACK_MIN_MS = 620;
+export const HERO_ATTACK_SPEED_PER_LEVEL_MS = 5;
+export const HERO_RALLY_DAMAGE_RATIO = 0.72;
+
+export const PLAYER_UPGRADES: PlayerUpgradeDefinition[] = [
+  {
+    id: "crit_chance",
+    name: "Keen Eye",
+    role: "Critical chance",
+    baseCost: 180,
+    costGrowth: 1.32,
+    maxLevel: 35,
+    accent: "#fb7185",
+  },
+  {
+    id: "crit_damage",
+    name: "Brutal Edge",
+    role: "Critical damage",
+    baseCost: 260,
+    costGrowth: 1.34,
+    maxLevel: 30,
+    accent: "#f97316",
+  },
+  {
+    id: "double_attack",
+    name: "Double Strike",
+    role: "Extra tap hit chance",
+    baseCost: 420,
+    costGrowth: 1.36,
+    maxLevel: 30,
+    accent: "#facc15",
+  },
+  {
+    id: "overkill_carry",
+    name: "Cleaving Carry",
+    role: "Carry overkill damage",
+    baseCost: 650,
+    costGrowth: 1.38,
+    maxLevel: 25,
+    accent: "#22c55e",
+  },
+  {
+    id: "hero_rally",
+    name: "Hero Rally",
+    role: "Tap triggers hero strike",
+    baseCost: 950,
+    costGrowth: 1.4,
+    maxLevel: 25,
+    accent: "#38bdf8",
+  },
+];
+
+export const PLAYER_UPGRADE_BY_ID = PLAYER_UPGRADES.reduce(
+  (lookup, upgrade) => {
+    lookup[upgrade.id] = upgrade;
+    return lookup;
+  },
+  {} as Record<PlayerUpgradeId, PlayerUpgradeDefinition>,
+);
 
 export const HEROES: HeroDefinition[] = [
   {

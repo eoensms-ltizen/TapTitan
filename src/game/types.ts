@@ -7,6 +7,8 @@ export type HeroId =
 
 export type SkillId = "titan_surge" | "gold_pact" | "boss_breaker";
 
+export type PlayerUpgradeId = "crit_chance" | "crit_damage" | "double_attack" | "overkill_carry" | "hero_rally";
+
 export type PrestigeUpgradeId = "ancient_edge" | "guild_oath" | "fortune_seal" | "chrono_brand";
 
 export type BossPowerId = "ember_rage" | "bone_guard" | "mire_regen" | "crystal_barrier" | "rift_haste";
@@ -57,6 +59,16 @@ export interface SkillDefinition {
   accent: string;
 }
 
+export interface PlayerUpgradeDefinition {
+  id: PlayerUpgradeId;
+  name: string;
+  role: string;
+  baseCost: number;
+  costGrowth: number;
+  maxLevel: number;
+  accent: string;
+}
+
 export interface SkillRuntime {
   level: number;
   expiresAt: number;
@@ -99,7 +111,17 @@ export interface CombatReport {
   gold: number;
   killed: boolean;
   critical: boolean;
-  source: "tap" | "dps";
+  source: "tap" | "hero";
+  heroId?: HeroId;
+  doubleAttack?: boolean;
+  rally?: boolean;
+  overkillDamage?: number;
+}
+
+export interface CombatEvent extends CombatReport {
+  id: number;
+  x: number;
+  y: number;
 }
 
 export interface GameSnapshot {
@@ -107,6 +129,7 @@ export interface GameSnapshot {
   gold: number;
   lifetimeGold: number;
   playerLevel: number;
+  playerUpgrades: Record<PlayerUpgradeId, number>;
   heroLevels: Record<HeroId, number>;
   skillState: Record<SkillId, SkillRuntime>;
   stage: number;

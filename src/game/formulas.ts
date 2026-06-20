@@ -6,12 +6,16 @@ import {
   BOSS_TIME_LIMIT_MS,
   CRIT_CHANCE,
   CRIT_MULTIPLIER,
+  HERO_ATTACK_BASE_MS,
+  HERO_ATTACK_MIN_MS,
+  HERO_ATTACK_SPEED_PER_LEVEL_MS,
   HEROES,
   HERO_BY_ID,
   MIN_PRESTIGE_STAGE,
   MONSTER_VARIANTS,
   PLAYER_DAMAGE_PER_LEVEL,
   PLAYER_UPGRADE_BASE_COST,
+  PLAYER_UPGRADE_BY_ID,
   PLAYER_UPGRADE_COST_GROWTH,
   PRESTIGE_BOSS_TIME_PER_LEVEL_MS,
   PRESTIGE_DAMAGE_PER_SHARD,
@@ -21,7 +25,7 @@ import {
   PRESTIGE_UPGRADE_BY_ID,
   SKILL_BY_ID,
 } from "./balance";
-import type { BossPowerId, GameSnapshot, HeroId, Monster, MonsterVariant, PrestigeUpgradeId, SkillId } from "./types";
+import type { BossPowerId, GameSnapshot, HeroId, Monster, MonsterVariant, PlayerUpgradeId, PrestigeUpgradeId, SkillId } from "./types";
 
 const MONSTER_SEQUENCE: MonsterVariant[] = ["rift_ogre", "ash_imp", "bone_knight", "mire_beast", "crystal_wraith"];
 
@@ -88,6 +92,46 @@ export function getPlayerUpgradeCost(level: number): number {
   return Math.floor(PLAYER_UPGRADE_BASE_COST * PLAYER_UPGRADE_COST_GROWTH ** level);
 }
 
+export function getPlayerMasteryCost(upgradeId: PlayerUpgradeId, level: number): number {
+  const upgrade = PLAYER_UPGRADE_BY_ID[upgradeId];
+  return Math.floor(upgrade.baseCost * upgrade.costGrowth ** level);
+}
+
+export function getPlayerMasteryBonus(upgradeId: PlayerUpgradeId, level: number): number {
+  switch (upgradeId) {
+    case "crit_chance":
+      return Math.min(0.42, level * 0.008);
+    case "crit_damage":
+      return level * 0.16;
+    case "double_attack":
+      return Math.min(0.34, level * 0.012);
+    case "overkill_carry":
+      return Math.min(0.7, level * 0.028);
+    case "hero_rally":
+      return Math.min(0.28, level * 0.011);
+  }
+}
+
+export function getCritChance(snapshot: GameSnapshot): number {
+  return Math.min(0.55, CRIT_CHANCE + getPlayerMasteryBonus("crit_chance", snapshot.playerUpgrades.crit_chance));
+}
+
+export function getCritMultiplier(snapshot: GameSnapshot): number {
+  return CRIT_MULTIPLIER + getPlayerMasteryBonus("crit_damage", snapshot.playerUpgrades.crit_damage);
+}
+
+export function getDoubleAttackChance(snapshot: GameSnapshot): number {
+  return getPlayerMasteryBonus("double_attack", snapshot.playerUpgrades.double_attack);
+}
+
+export function getOverkillCarryRatio(snapshot: GameSnapshot): number {
+  return getPlayerMasteryBonus("overkill_carry", snapshot.playerUpgrades.overkill_carry);
+}
+
+export function getHeroRallyChance(snapshot: GameSnapshot): number {
+  return getPlayerMasteryBonus("hero_rally", snapshot.playerUpgrades.hero_rally);
+}
+
 export function getHeroUpgradeCost(heroId: HeroId, level: number): number {
   const hero = HERO_BY_ID[heroId];
   return Math.floor(hero.baseCost * hero.costGrowth ** level);
@@ -106,6 +150,20 @@ export function getHeroDps(heroId: HeroId, level: number): number {
   const hero = HERO_BY_ID[heroId];
   const milestoneMultiplier = 2 ** Math.floor(level / 25);
   return hero.baseDps * level * hero.dpsGrowth ** Math.max(0, level - 1) * milestoneMultiplier;
+}
+
+export function getHeroAttackIntervalMs(level: number): number {
+  return Math.max(HERO_ATTACK_MIN_MS, HERO_ATTACK_BASE_MS - Math.max(0, level - 1) * HERO_ATTACK_SPEED_PER_LEVEL_MS);
+}
+
+export function getHeroAttackDamage(snapshot: GameSnapshot, heroId: HeroId, now: number): number {
+  const level = snapshot.heroLevels[heroId];
+  if (level <= 0) {
+    return 0;
+  }
+
+  const attacksPerSecond = 1000 / getHeroAttackIntervalMs(level);
+  return getHeroDps(heroId, level) / attacksPerSecond * getPermanentDamageMultiplier(snapshot) * getPrestigeUpgradeMultipliers(snapshot).dps * getSkillMultipliers(snapshot, now).allDamage;
 }
 
 export function getHeroMilestone(level: number): { currentMultiplier: number; nextLevel: number | null; progress: number } {
@@ -261,10 +319,10 @@ export function getStageProgress(snapshot: GameSnapshot): number {
   return Math.min(1, snapshot.killsInStage / 5);
 }
 
-export function shouldCrit(randomValue: number): boolean {
-  return randomValue < CRIT_CHANCE;
+export function shouldCrit(randomValue: number, chance = CRIT_CHANCE): boolean {
+  return randomValue < chance;
 }
 
-export function applyCritical(damage: number, critical: boolean): number {
-  return critical ? damage * CRIT_MULTIPLIER : damage;
+export function applyCritical(damage: number, critical: boolean, multiplier = CRIT_MULTIPLIER): number {
+  return critical ? damage * multiplier : damage;
 }

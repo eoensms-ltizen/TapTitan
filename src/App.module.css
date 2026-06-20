@@ -1245,6 +1245,7 @@
 
 .upgradeCard,
 .skillCard,
+.masteryCard,
 .infoCard,
 .settingsActions,
 .prestigePanel {
@@ -1262,7 +1263,8 @@
 }
 
 .upgradeCard,
-.skillCard {
+.skillCard,
+.masteryCard {
   min-height: 76px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1273,6 +1275,18 @@
 
 .skillCard {
   grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.masteryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.masteryCard {
+  min-height: 92px;
+  align-items: end;
+  padding: 10px;
 }
 
 .cardAccent {
@@ -1294,6 +1308,7 @@
 
 .upgradeCard h2,
 .skillCard h2,
+.masteryCard h2,
 .prestigePanel h2 {
   margin: 0 0 4px;
   color: var(--pixel-white);
@@ -1307,6 +1322,7 @@
 
 .upgradeCard span,
 .skillCard span,
+.masteryCard span,
 .infoCard span,
 .prestigePanel span,
 .prestigePanel p {
@@ -1880,7 +1896,8 @@
   }
 
   .upgradeCard,
-  .skillCard {
+  .skillCard,
+  .masteryCard {
     min-height: 64px;
     gap: 8px;
     padding: 9px;
@@ -1888,12 +1905,14 @@
 
   .upgradeCard h2,
   .skillCard h2,
+  .masteryCard h2,
   .prestigePanel h2 {
     font-size: 0.88rem;
   }
 
   .upgradeCard span,
   .skillCard span,
+  .masteryCard span,
   .infoCard span,
   .prestigePanel span,
   .prestigePanel p {
@@ -1927,6 +1946,10 @@
   .featureGrid {
     grid-template-columns: 1fr;
   }
+
+  .masteryGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 390px) {
@@ -1941,7 +1964,8 @@
   }
 
   .upgradeCard,
-  .skillCard {
+  .skillCard,
+  .masteryCard {
     gap: 8px;
     padding: 10px;
   }

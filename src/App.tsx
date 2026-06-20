@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowUpCircle,
   Award,
@@ -31,16 +31,23 @@ import {
   MIN_PRESTIGE_STAGE,
   MONSTERS_PER_STAGE,
   OFFLINE_CAP_SECONDS,
+  PLAYER_UPGRADES,
   PRESTIGE_UPGRADES,
   SKILLS,
 } from "./game/balance";
-import { emitFeedback } from "./game/feedback";
+import { emitFeedback, setMusicEnabled } from "./game/feedback";
 import {
   getBossTimeLimitMs,
+  getCritChance,
+  getCritMultiplier,
+  getDoubleAttackChance,
   getHeroDps,
   getHeroMilestone,
   getHeroUpgradeCost,
+  getHeroRallyChance,
   getOfflineReward,
+  getOverkillCarryRatio,
+  getPlayerMasteryCost,
   getPermanentDamageMultiplier,
   getPlayerUpgradeCost,
   getPrestigeUpgradeBonus,
@@ -57,7 +64,7 @@ import {
 } from "./game/formulas";
 import { formatClock, formatNumber, formatSeconds } from "./game/format";
 import { getBossTimeProgress, getBossTimeRemaining, useGameStore } from "./game/store";
-import type { CombatReport, HeroId, MonsterVariant, PrestigeUpgradeId, SkillId } from "./game/types";
+import type { CombatReport, HeroId, MonsterVariant, PlayerUpgradeId, PrestigeUpgradeId, SkillId } from "./game/types";
 import { useGameLoop } from "./hooks/useGameLoop";
 import styles from "./App.module.css";
 import heroEmberSquireFrame0 from "./assets/sprites/hero-motion/ember_squire-frame-0.png";
@@ -589,10 +596,12 @@ function Arena() {
   const snapshot = useGameStore();
   const tapMonster = useGameStore((state) => state.tapMonster);
   const retryBoss = useGameStore((state) => state.retryBoss);
+  const combatEvents = useGameStore((state) => state.combatEvents);
   const [floaters, setFloaters] = useState<FloatingHit[]>([]);
   const [hitPulse, setHitPulse] = useState(0);
   const [impactTone, setImpactTone] = useState<ImpactTone>("damage");
   const dragTapRef = useRef<DragTapState | null>(null);
+  const lastCombatEventIdRef = useRef(0);
   const now = Date.now();
   const hpPercent = Math.max(0, Math.min(100, (snapshot.monster.hp / snapshot.monster.maxHp) * 100));
   const bossTime = getBossTimeRemaining(snapshot, now);
@@ -617,11 +626,19 @@ function Arena() {
   }
 
   function handleCombatReport(report: CombatReport, x: number, y: number) {
+    const hitLabel = report.rally
+      ? `${formatNumber(report.damage)} RALLY`
+      : report.doubleAttack
+        ? `${formatNumber(report.damage)} x2`
+        : report.critical
+          ? `${formatNumber(report.damage)} CRIT`
+          : formatNumber(report.damage);
+
     addFloater({
-      value: report.critical ? `${formatNumber(report.damage)} CRIT` : formatNumber(report.damage),
+      value: hitLabel,
       x,
       y,
-      tone: report.critical ? "crit" : "damage",
+      tone: report.critical || report.doubleAttack || report.rally ? "crit" : "damage",
     });
 
     if (report.killed) {
@@ -639,8 +656,32 @@ function Arena() {
       });
     }
 
-    emitFeedback(report.killed ? "kill" : report.critical ? "crit" : "tap", snapshot.settings);
+    if (report.killed) {
+      emitFeedback("kill", snapshot.settings);
+    } else if (report.rally) {
+      emitFeedback("rally", snapshot.settings);
+    } else if (report.source === "hero") {
+      emitFeedback("heroHit", snapshot.settings);
+    } else if (report.doubleAttack) {
+      emitFeedback("double", snapshot.settings);
+    } else {
+      emitFeedback(report.critical ? "crit" : "tap", snapshot.settings);
+    }
   }
+
+  useEffect(() => {
+    const unseenEvents = combatEvents.filter((event) => event.id > lastCombatEventIdRef.current);
+    if (unseenEvents.length === 0) {
+      return;
+    }
+
+    lastCombatEventIdRef.current = unseenEvents[unseenEvents.length - 1].id;
+    for (const event of unseenEvents) {
+      setHitPulse((value) => value + 1);
+      setImpactTone(event.killed ? "kill" : event.critical ? "crit" : "damage");
+      handleCombatReport(event, event.x, event.y);
+    }
+  }, [combatEvents]);
 
   function getHitPoint(target: HTMLButtonElement, clientX: number, clientY: number): { x: number; y: number } {
     const rect = target.getBoundingClientRect();
@@ -839,6 +880,7 @@ function Arena() {
 function PlayerTab() {
   const snapshot = useGameStore();
   const upgradePlayer = useGameStore((state) => state.upgradePlayer);
+  const upgradePlayerMastery = useGameStore((state) => state.upgradePlayerMastery);
   const prestige = useGameStore((state) => state.prestige);
   const now = Date.now();
   const cost = getPlayerUpgradeCost(snapshot.playerLevel);
@@ -846,6 +888,7 @@ function PlayerTab() {
   const tapDamage = getTapDamage(snapshot, now);
   const prestigeReward = getPrestigeReward(snapshot.highestStage);
   const canPrestige = snapshot.highestStage >= MIN_PRESTIGE_STAGE && prestigeReward > 0;
+  const freeUpgrades = snapshot.settings.developerMode;
 
   function handleUpgradePlayer() {
     const upgraded = upgradePlayer();
@@ -858,6 +901,44 @@ function PlayerTab() {
   function handlePrestige() {
     if (prestige()) {
       emitFeedback("prestige", snapshot.settings);
+    }
+  }
+
+  function handleUpgradeMastery(upgradeId: PlayerUpgradeId) {
+    const upgraded = upgradePlayerMastery(upgradeId);
+    if (upgraded) {
+      emitFeedback("upgrade", snapshot.settings);
+    }
+    return upgraded;
+  }
+
+  function getMasteryValue(upgradeId: PlayerUpgradeId) {
+    switch (upgradeId) {
+      case "crit_chance":
+        return `${Math.round(getCritChance(snapshot) * 1000) / 10}% crit`;
+      case "crit_damage":
+        return `x${getCritMultiplier(snapshot).toFixed(2)} crit`;
+      case "double_attack":
+        return `${Math.round(getDoubleAttackChance(snapshot) * 1000) / 10}% double`;
+      case "overkill_carry":
+        return `${Math.round(getOverkillCarryRatio(snapshot) * 100)}% carry`;
+      case "hero_rally":
+        return `${Math.round(getHeroRallyChance(snapshot) * 1000) / 10}% rally`;
+    }
+  }
+
+  function getMasteryStepLabel(upgradeId: PlayerUpgradeId) {
+    switch (upgradeId) {
+      case "crit_chance":
+        return "+0.8% per level";
+      case "crit_damage":
+        return "+0.16x per level";
+      case "double_attack":
+        return "+1.2% per level";
+      case "overkill_carry":
+        return "+2.8% per level";
+      case "hero_rally":
+        return "+1.1% per level";
     }
   }
 
@@ -879,6 +960,37 @@ function PlayerTab() {
           {formatNumber(displayedCost)}
         </DragRepeatButton>
       </article>
+      <div className={styles.masteryGrid}>
+        {PLAYER_UPGRADES.map((upgrade) => {
+          const level = snapshot.playerUpgrades[upgrade.id];
+          const capped = level >= upgrade.maxLevel;
+          const masteryCost = getPlayerMasteryCost(upgrade.id, level);
+          const masteryDisplayedCost = freeUpgrades ? 0 : masteryCost;
+          return (
+            <article className={styles.masteryCard} key={upgrade.id}>
+              <div className={styles.cardAccent} style={{ background: upgrade.accent }} />
+              <div>
+                <p className={styles.eyebrow}>{upgrade.role}</p>
+                <h2>
+                  {upgrade.name} Lv.{level}/{upgrade.maxLevel}
+                </h2>
+                <span>
+                  {getMasteryValue(upgrade.id)} / {getMasteryStepLabel(upgrade.id)}
+                </span>
+              </div>
+              <DragRepeatButton
+                className={styles.buyButton}
+                disabled={capped || (!freeUpgrades && snapshot.gold < masteryCost)}
+                onTrigger={() => handleUpgradeMastery(upgrade.id)}
+                dataTestId={`upgrade-player-mastery-${upgrade.id}`}
+              >
+                <Sparkles size={17} />
+                {capped ? "Max" : formatNumber(masteryDisplayedCost)}
+              </DragRepeatButton>
+            </article>
+          );
+        })}
+      </div>
       <article className={styles.infoCard}>
         <strong>Prestige Bonus</strong>
         <span>Permanent damage x{getPermanentDamageMultiplier(snapshot).toFixed(2)}</span>
@@ -1469,6 +1581,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("player");
   const [activeFeature, setActiveFeature] = useState<FeatureId>("battle");
   const [quickPanel, setQuickPanel] = useState<QuickPanelId | null>(null);
+  const soundEnabled = useGameStore((state) => state.settings.soundEnabled);
+
+  useEffect(() => {
+    setMusicEnabled(soundEnabled);
+    return () => setMusicEnabled(false);
+  }, [soundEnabled]);
 
   return (
     <div className={styles.appShell}>
