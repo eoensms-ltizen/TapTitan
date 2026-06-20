@@ -7,6 +7,9 @@
   --pixel-gold: #d6a947;
   --pixel-gold-light: #ffe6a3;
   --pixel-gold-dark: #5f3510;
+  --panel-metal: #101820;
+  --panel-metal-dark: #05080d;
+  --panel-line: #2e3a42;
   --pixel-ink: #01030a;
   --pixel-white: #fff4d8;
 }
@@ -104,17 +107,17 @@
   aspect-ratio: 9 / 16;
   min-height: 0;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) clamp(300px, 38%, 500px);
+  grid-template-rows: auto auto minmax(0, 1fr) clamp(308px, 32.5%, 430px);
   overflow: hidden;
   background:
     linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(7, 25, 74, 0.98), rgba(2, 8, 23, 0.98));
+    linear-gradient(180deg, rgba(10, 15, 20, 0.99), rgba(2, 6, 12, 0.99));
   background-size: 5px 5px, 5px 5px, auto;
-  border: 3px solid var(--pixel-gold);
+  border: 2px solid var(--pixel-gold);
   box-shadow:
     0 0 0 2px var(--pixel-ink),
-    0 0 0 5px var(--pixel-gold-dark),
+    0 0 0 4px #2a1a0a,
     0 0 70px rgba(0, 0, 0, 0.66);
   image-rendering: pixelated;
 }
@@ -122,36 +125,89 @@
 .topBar {
   z-index: 3;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0;
-  padding: 8px 8px 6px;
-  background: var(--pixel-navy-dark);
-  border-bottom: 3px solid var(--pixel-gold);
-  box-shadow: 0 3px 0 var(--pixel-ink);
+  grid-template-columns:
+    minmax(84px, 0.72fr)
+    minmax(160px, 1.62fr)
+    minmax(82px, 0.72fr)
+    minmax(82px, 0.72fr)
+    repeat(3, minmax(52px, 0.48fr));
+  gap: 4px;
+  padding: 10px 10px 7px;
+  background:
+    linear-gradient(180deg, rgba(255, 230, 163, 0.08), transparent 42%),
+    linear-gradient(180deg, #101820, #05080d);
+  border-bottom: 2px solid var(--pixel-gold);
+  box-shadow:
+    inset 0 -2px 0 #000,
+    0 3px 0 #000;
+}
+
+.stageBadge,
+.mainStat,
+.hudMetric,
+.hudAction {
+  min-width: 0;
+  min-height: 78px;
+  border: 2px solid #9f7434;
+  border-radius: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
+  background-size: 3px 3px, auto;
+  color: #eacb85;
+  box-shadow:
+    inset 0 0 0 2px #030609,
+    inset 0 0 0 4px rgba(255, 230, 163, 0.05),
+    0 2px 0 #000;
+}
+
+.stageBadge {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  padding: 8px 4px 13px;
+  clip-path: polygon(0 0, 100% 0, 100% 82%, 50% 100%, 0 82%);
+  text-transform: uppercase;
+}
+
+.stageBadge::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  clip-path: inherit;
+  border: 1px solid rgba(255, 230, 163, 0.35);
+  pointer-events: none;
+}
+
+.stageBadge span {
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.stageBadge strong {
+  color: var(--pixel-white);
+  font-size: clamp(1.8rem, 5.2vw, 2.45rem);
+  line-height: 0.95;
+  text-shadow:
+    2px 2px 0 #000,
+    0 0 10px rgba(255, 230, 163, 0.22);
 }
 
 .mainStat {
-  min-height: 52px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border: 3px solid var(--pixel-gold);
-  border-radius: 0;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #102d73, #07194a);
-  background-size: auto, auto;
+  justify-content: flex-start;
+  gap: 13px;
+  padding: 0 18px;
   color: var(--pixel-white);
-  font-size: clamp(1.65rem, 6vw, 2.35rem);
+  font-size: clamp(1.55rem, 4.5vw, 2.18rem);
   font-weight: 900;
   letter-spacing: 0;
   text-shadow:
-    3px 3px 0 #121212,
-    -1px -1px 0 var(--pixel-gold-light);
-  box-shadow:
-    inset 0 0 0 2px var(--pixel-ink),
-    inset 0 0 0 4px rgba(255, 230, 163, 0.2);
+    3px 3px 0 #000,
+    0 0 14px rgba(255, 230, 163, 0.22);
 }
 
 .mainStat svg {
@@ -159,54 +215,205 @@
   filter: drop-shadow(2px 2px 0 #3b2108);
 }
 
-.statGrid {
+.mainStat div {
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+  gap: 3px;
 }
 
-.statGrid span {
-  min-height: 39px;
+.mainStat span,
+.mainStat small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mainStat small {
+  color: #e5b95d;
+  font-size: clamp(0.66rem, 1.9vw, 0.95rem);
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.hudMetric,
+.hudAction {
   display: grid;
   place-items: center;
-  border: 3px solid var(--pixel-gold);
-  border-top: 0;
-  border-radius: 0;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #0e2a69, #06163c);
-  color: var(--pixel-white);
-  font-size: 0.9rem;
-  font-weight: 900;
+  align-content: center;
+  gap: 2px;
+  padding: 4px;
   text-transform: uppercase;
-  text-shadow: 2px 2px 0 #101010;
-  white-space: nowrap;
-  box-shadow: inset 0 0 0 2px var(--pixel-ink);
 }
 
-.statGrid span + span {
-  border-left: 0;
+.hudMetric svg,
+.hudAction svg {
+  color: #d7b36a;
+  filter: drop-shadow(2px 2px 0 #000);
+}
+
+.hudMetric strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: #f5d489;
+  font-size: clamp(0.9rem, 2.5vw, 1.26rem);
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 2px 2px 0 #101010;
+}
+
+.hudMetric span,
+.hudAction span {
+  max-width: 100%;
+  overflow: hidden;
+  color: #d8bd83;
+  font-size: clamp(0.56rem, 1.65vw, 0.72rem);
+  font-weight: 900;
+  text-overflow: ellipsis;
+  text-shadow: 2px 2px 0 #000;
+  white-space: nowrap;
+}
+
+.hudAction {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    filter 100ms ease,
+    transform 100ms ease;
+}
+
+.hudAction:active {
+  transform: translateY(1px);
+  filter: brightness(1.25);
+}
+
+.quickPanel {
+  position: absolute;
+  top: 104px;
+  right: 12px;
+  z-index: 20;
+  width: min(340px, calc(100% - 24px));
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 2px solid var(--pixel-gold);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, rgba(19, 28, 36, 0.98), rgba(4, 8, 13, 0.98));
+  background-size: 3px 3px, auto;
+  box-shadow:
+    inset 0 0 0 2px #030609,
+    0 14px 34px rgba(0, 0, 0, 0.58);
+}
+
+.quickPanelHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--pixel-gold-light);
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+}
+
+.quickPanelHeader strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.closeButton {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #8f6932;
+  background: #081018;
+  color: var(--pixel-white);
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px #020406;
+}
+
+.quickPanelBody,
+.drawerActionGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.drawerAction,
+.drawerNote {
+  min-width: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 2px solid #9f7434;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
+    linear-gradient(180deg, #13222e, #071016);
+  color: #f4dfb6;
+  font-weight: 900;
+  text-align: left;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+  box-shadow: inset 0 0 0 2px #020406;
+}
+
+.drawerAction {
+  cursor: pointer;
+}
+
+.drawerAction svg,
+.drawerNote svg {
+  flex: 0 0 auto;
+  color: var(--pixel-gold-light);
+  filter: drop-shadow(2px 2px 0 #000);
+}
+
+.drawerNote {
+  display: grid;
+  gap: 4px;
+  align-items: start;
+  text-transform: none;
+}
+
+.drawerNote strong {
+  text-transform: uppercase;
+}
+
+.drawerNote span,
+.quickPanel p {
+  margin: 0;
+  color: #d8bd83;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-shadow: 1px 1px 0 #000;
 }
 
 .arena {
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  padding: 8px 10px 10px;
+  padding: 0 10px 8px;
   min-height: 0;
 }
 
 .stageStrip {
+  z-index: 4;
   display: grid;
   gap: 7px;
-  padding: 8px 10px;
-  border: 3px solid var(--pixel-gold);
+  margin: 0 18px -2px;
+  padding: 9px 12px 8px;
+  border: 2px solid var(--pixel-gold);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
-    linear-gradient(180deg, #0b2868, #05143b);
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, rgba(16, 24, 32, 0.94), rgba(4, 8, 13, 0.94));
+  background-size: 3px 3px, auto;
   box-shadow:
     inset 0 0 0 2px var(--pixel-ink),
-    0 3px 0 var(--pixel-ink);
+    0 3px 0 #000;
 }
 
 .stageStrip > div:first-child {
@@ -219,12 +426,13 @@
 }
 
 .stageStrip strong {
-  font-size: 1.05rem;
+  color: var(--pixel-gold-light);
+  font-size: clamp(0.98rem, 2.8vw, 1.25rem);
   text-transform: uppercase;
 }
 
 .stageStrip span {
-  color: #f8e6bf;
+  color: #e5c78d;
   font-size: 0.78rem;
   font-weight: 700;
 }
@@ -232,10 +440,10 @@
 .stageMeter,
 .hpBar,
 .timerBar {
-  height: 11px;
+  height: 10px;
   overflow: hidden;
   border-radius: 0;
-  border: 2px solid var(--pixel-gold);
+  border: 2px solid #b98738;
   background: #01030a;
   box-shadow: inset 0 0 0 2px #130a02;
 }
@@ -266,13 +474,14 @@
   padding: 0;
   overflow: hidden;
   border-radius: 0;
-  border: 3px solid var(--pixel-gold);
+  border: 2px solid var(--pixel-gold);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%),
-    linear-gradient(180deg, #0b2868, #06163d);
+    linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
+    linear-gradient(180deg, #101820, #05080d);
+  background-size: 3px 3px, auto;
   box-shadow:
     inset 0 0 0 2px var(--pixel-ink),
-    0 4px 0 var(--pixel-ink);
+    0 3px 0 #000;
 }
 
 .hpHeader,
@@ -281,18 +490,18 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  min-height: 42px;
-  padding: 8px 12px 3px;
-  color: var(--pixel-white);
-  font-size: 1rem;
+  min-height: 38px;
+  padding: 8px 16px 2px;
+  color: var(--pixel-gold-light);
+  font-size: clamp(0.86rem, 2.3vw, 1.08rem);
   font-weight: 900;
   text-transform: uppercase;
   text-shadow: 2px 2px 0 #070707;
 }
 
 .hpBar {
-  height: 17px;
-  margin: 0 12px 10px;
+  height: 13px;
+  margin: 0 16px 8px;
 }
 
 .hpBar span {
@@ -330,9 +539,9 @@
   border: 0;
   border-radius: 0;
   background-image:
-    linear-gradient(180deg, rgba(2, 8, 23, 0.04), rgba(2, 8, 23, 0.42)),
+    linear-gradient(180deg, rgba(2, 8, 23, 0.02), rgba(2, 8, 23, 0.36)),
     var(--battle-background);
-  background-position: center, center;
+  background-position: center, center bottom;
   background-size: auto, cover;
   background-repeat: repeat, no-repeat;
   cursor: pointer;
@@ -349,8 +558,8 @@
   inset: 0;
   border-radius: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
-    radial-gradient(circle at 50% 58%, transparent 0 24%, rgba(0, 0, 0, 0.28) 62%, rgba(0, 0, 0, 0.56) 100%);
+    linear-gradient(rgba(255, 255, 255, 0.028) 50%, transparent 50%),
+    radial-gradient(circle at 50% 58%, transparent 0 28%, rgba(0, 0, 0, 0.2) 66%, rgba(0, 0, 0, 0.5) 100%);
   background-size: 3px 3px, auto;
   animation: none;
 }
@@ -437,8 +646,8 @@
   --strike-y: 45%;
   --weapon-angle: -25deg;
   position: absolute;
-  width: 104px;
-  height: 72px;
+  width: clamp(58px, 14.4%, 112px);
+  height: clamp(44px, 10.4%, 82px);
   transform: translate(0, -100%);
   transform-origin: left bottom;
 }
@@ -602,8 +811,8 @@
   --strike-x: 35%;
   --strike-y: 34%;
   --weapon-angle: 205deg;
-  width: 110px;
-  height: 78px;
+  width: clamp(64px, 15.4%, 120px);
+  height: clamp(48px, 11.2%, 88px);
 }
 
 .heroSlot_star_hexer {
@@ -617,10 +826,10 @@
 .monsterImpact {
   position: relative;
   z-index: 2;
-  width: min(66%, 300px);
-  height: 100%;
+  width: min(43%, 315px);
+  height: 68%;
   max-height: 100%;
-  margin-top: -6px;
+  margin-top: 7%;
   display: grid;
   place-items: center;
   transform-origin: 50% 78%;
@@ -631,7 +840,7 @@
   width: auto;
   height: auto;
   max-width: 100%;
-  max-height: 92%;
+  max-height: 100%;
   display: block;
   image-rendering: pixelated;
   pointer-events: none;
@@ -639,6 +848,26 @@
   filter:
     drop-shadow(3px 3px 0 #070707)
     drop-shadow(0 18px 18px rgba(0, 0, 0, 0.5));
+}
+
+.monsterSprite_ash_imp {
+  transform: scale(0.98);
+}
+
+.monsterSprite_bone_knight {
+  transform: scale(0.98);
+}
+
+.monsterSprite_mire_beast {
+  transform: scale(1);
+}
+
+.monsterSprite_crystal_wraith {
+  transform: scale(0.98);
+}
+
+.monsterSprite_rift_ogre {
+  transform: scale(1);
 }
 
 .monsterImpact_crit {
@@ -650,7 +879,8 @@
 }
 
 .bossButton .monsterImpact {
-  width: min(72%, 330px);
+  width: min(50%, 360px);
+  height: 73%;
 }
 
 .bossSprite {
@@ -694,6 +924,7 @@
 
 .retryButton,
 .prestigeButton,
+.prestigeInlineButton,
 .secondaryButton,
 .dangerButton,
 .buyButton,
@@ -738,6 +969,7 @@
 
 .retryButton > :not(.buttonFlash),
 .prestigeButton > :not(.buttonFlash),
+.prestigeInlineButton > :not(.buttonFlash),
 .secondaryButton > :not(.buttonFlash),
 .dangerButton > :not(.buttonFlash),
 .buyButton > :not(.buttonFlash),
@@ -749,6 +981,7 @@
 
 .retryButton:active,
 .prestigeButton:active,
+.prestigeInlineButton:active,
 .secondaryButton:active,
 .dangerButton:active,
 .buyButton:active,
@@ -761,6 +994,7 @@
 
 .retryButton:disabled,
 .prestigeButton:disabled,
+.prestigeInlineButton:disabled,
 .secondaryButton:disabled,
 .dangerButton:disabled,
 .buyButton:disabled,
@@ -774,17 +1008,17 @@
 .retryButton {
   position: absolute;
   left: 50%;
-  bottom: 10px;
-  width: min(300px, calc(100% - 84px));
+  bottom: 12px;
+  width: min(286px, calc(100% - 112px));
   justify-self: center;
-  min-height: 38px;
+  min-height: 42px;
   margin: 0;
   z-index: 8;
   transform: translateX(-50%);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #153c8d, #07194a);
-  font-size: 0.9rem;
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
+  font-size: 0.86rem;
 }
 
 .retryButton:active {
@@ -794,15 +1028,16 @@
 .upgradePanel {
   z-index: 5;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
-  padding: 8px 8px calc(8px + var(--safe-bottom));
-  border-top: 3px solid var(--pixel-gold);
+  padding: 8px 10px calc(8px + var(--safe-bottom));
+  border-top: 2px solid var(--pixel-gold);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.025) 50%, transparent 50%),
-    linear-gradient(180deg, #06163d, #020817);
-  box-shadow: 0 -3px 0 var(--pixel-ink);
+    linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
+    linear-gradient(180deg, #101820, #05080d);
+  background-size: 3px 3px, auto;
+  box-shadow: 0 -3px 0 #000;
 }
 
 .offlineSlot {
@@ -812,23 +1047,23 @@
 .tabBar {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 5px;
-  margin-bottom: 7px;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .tabButton {
   min-width: 0;
-  min-height: 48px;
+  min-height: 62px;
   display: grid;
   place-items: center;
   gap: 2px;
-  border: 3px solid var(--pixel-gold);
+  border: 2px solid #9f7434;
   border-radius: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
-    linear-gradient(180deg, #09215a, #041235);
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
   color: #dac9a3;
-  font-size: 0.62rem;
+  font-size: 0.66rem;
   font-weight: 900;
   text-transform: uppercase;
   text-shadow: 2px 2px 0 #070707;
@@ -839,7 +1074,7 @@
     border-color 120ms ease;
   box-shadow:
     inset 0 0 0 2px var(--pixel-ink),
-    0 3px 0 var(--pixel-ink);
+    0 2px 0 #000;
 }
 
 .tabButton span {
@@ -852,9 +1087,74 @@
 .tabActive {
   border-color: var(--pixel-gold-light);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #15439a, #09215a);
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #1b3b61, #0b1722);
   color: var(--pixel-white);
+}
+
+.featureNav {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  padding-top: 8px;
+}
+
+.featureButton {
+  min-width: 0;
+  min-height: 74px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 5px;
+  border: 2px solid #7f5f30;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.02) 50%, transparent 50%),
+    linear-gradient(180deg, #151d23, #070b0f);
+  background-size: 3px 3px, auto;
+  color: #bfa878;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+  cursor: pointer;
+  box-shadow:
+    inset 0 0 0 2px #020406,
+    0 2px 0 #000;
+}
+
+.featureButton svg {
+  color: #bfa878;
+  filter: drop-shadow(2px 2px 0 #000);
+}
+
+.featureButton span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.featureActive {
+  border-color: #d6a947;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+    linear-gradient(180deg, #143858, #08121a);
+  color: var(--pixel-gold-light);
+  box-shadow:
+    inset 0 0 0 2px #020406,
+    inset 0 0 18px rgba(56, 189, 248, 0.22),
+    0 2px 0 #000;
+}
+
+.featureActive svg {
+  color: var(--pixel-gold-light);
+}
+
+.panelViewport {
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .tabContent {
@@ -870,6 +1170,79 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.featureContent {
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 2px 2px 10px 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.featureHeroCard {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 2px solid #9f7434;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
+  background-size: 3px 3px, auto;
+  box-shadow:
+    inset 0 0 0 2px #030609,
+    0 2px 0 #000;
+}
+
+.featureHeroCard svg {
+  color: var(--pixel-gold-light);
+  filter: drop-shadow(2px 2px 0 #000);
+}
+
+.featureHeroCard h2 {
+  margin: 0 0 4px;
+  color: var(--pixel-white);
+  font-size: 1.2rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+  overflow-wrap: anywhere;
+}
+
+.featureHeroCard span {
+  color: #f4dfb6;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.featureMeter {
+  height: 8px;
+  margin-top: 9px;
+  overflow: hidden;
+  border: 2px solid #9f7434;
+  background: #020406;
+  box-shadow: inset 0 0 0 1px #000;
+}
+
+.featureMeter span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2dd4bf, #f3c969);
+}
+
 .upgradeCard,
 .skillCard,
 .infoCard,
@@ -877,14 +1250,15 @@
 .prestigePanel {
   position: relative;
   overflow: visible;
-  border: 3px solid var(--pixel-gold);
+  border: 2px solid #9f7434;
   border-radius: 0;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%),
-    linear-gradient(180deg, #09215a, #041235);
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #121c26, #071016);
+  background-size: 3px 3px, auto;
   box-shadow:
     inset 0 0 0 2px var(--pixel-ink),
-    0 3px 0 var(--pixel-ink);
+    0 2px 0 #000;
 }
 
 .upgradeCard,
@@ -953,8 +1327,8 @@
   touch-action: none;
   user-select: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #153c8d, #07194a);
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
 }
 
 .lockedCard {
@@ -977,8 +1351,8 @@
   touch-action: none;
   user-select: none;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
-    linear-gradient(180deg, #09215a, #041235);
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
 }
 
 .iconButton span {
@@ -1048,8 +1422,18 @@
   margin-top: 0;
   padding: 0 10px;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #164aa7, #08215c);
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, #1c3446, #071016);
+}
+
+.prestigeInlineButton {
+  justify-self: end;
+  min-width: min(230px, 100%);
+  margin-top: 6px;
+  padding: 0 14px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, #1c3446, #071016);
 }
 
 .infoCard {
@@ -1083,8 +1467,8 @@
 
 .secondaryButton {
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #11606d, #082b4f);
+    linear-gradient(rgba(255, 255, 255, 0.026) 50%, transparent 50%),
+    linear-gradient(180deg, #0f4f58, #071b22);
 }
 
 .dangerButton {
@@ -1095,15 +1479,15 @@
 
 .toggleButton {
   background:
-    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
-    linear-gradient(180deg, #09215a, #041235);
+    linear-gradient(rgba(255, 255, 255, 0.024) 50%, transparent 50%),
+    linear-gradient(180deg, #17212a, #071016);
 }
 
 .toggleActive {
   border-color: var(--pixel-gold-light);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.04) 50%, transparent 50%),
-    linear-gradient(180deg, #164aa7, #08215c);
+    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%),
+    linear-gradient(180deg, #1d4965, #0b1822);
 }
 
 .offlineToast {
@@ -1379,11 +1763,73 @@
 }
 
 @media (max-width: 560px), (max-height: 720px) {
+  .gameFrame {
+    width: calc(100vw - var(--app-shell-pad) * 2);
+    height: calc(100dvh - var(--app-shell-pad) * 2);
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
+  .topBar {
+    grid-template-columns: 68px repeat(6, minmax(0, 1fr));
+    gap: 3px;
+    padding: 6px 6px 5px;
+  }
+
+  .stageBadge {
+    grid-row: span 2;
+    min-height: 78px;
+  }
+
+  .mainStat {
+    grid-column: 2 / -1;
+    min-height: 38px;
+    padding: 0 9px;
+    gap: 8px;
+    font-size: 1.25rem;
+  }
+
+  .mainStat small {
+    display: none;
+  }
+
+  .hudMetric,
+  .hudAction {
+    min-height: 37px;
+    padding: 2px;
+  }
+
+  .hudMetric {
+    grid-column: span 1;
+  }
+
+  .hudMetric svg,
+  .hudAction svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .hudMetric strong {
+    font-size: 0.62rem;
+  }
+
+  .hudMetric span,
+  .hudAction span {
+    font-size: 0.46rem;
+  }
+
+  .quickPanel {
+    top: 96px;
+    right: 7px;
+    width: calc(100% - 14px);
+  }
+
   .arena {
-    padding: 6px 7px 8px;
+    padding: 0 7px 7px;
   }
 
   .stageStrip {
+    margin: 0 10px -2px;
     padding: 7px 8px;
   }
 
@@ -1402,14 +1848,15 @@
   .retryButton {
     bottom: 7px;
     width: min(240px, calc(100% - 64px));
-    min-height: 32px;
+    min-height: 34px;
     margin: 0;
     font-size: 0.68rem;
   }
 
   .bossButton .monsterImpact,
   .monsterImpact {
-    width: min(62%, 238px);
+    width: min(43%, 230px);
+    height: 68%;
   }
 
   .upgradePanel {
@@ -1417,8 +1864,19 @@
   }
 
   .tabButton {
-    min-height: 42px;
+    min-height: 46px;
     font-size: 0.54rem;
+  }
+
+  .featureButton {
+    min-height: 52px;
+    gap: 2px;
+    font-size: 0.46rem;
+  }
+
+  .featureButton svg {
+    width: 18px;
+    height: 18px;
   }
 
   .upgradeCard,
@@ -1455,13 +1913,23 @@
     min-height: 36px;
     width: 100%;
   }
+
+  .featureHeroCard {
+    min-height: 76px;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .featureHeroCard h2 {
+    font-size: 0.96rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 390px) {
-  .statGrid span {
-    font-size: 0.64rem;
-  }
-
   .tabButton {
     min-height: 42px;
     font-size: 0.58rem;

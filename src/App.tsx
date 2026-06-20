@@ -1,28 +1,46 @@
 import { useMemo, useRef, useState } from "react";
 import {
+  ArrowUpCircle,
+  Award,
   Clock,
+  Crown,
   Gem,
   HandCoins,
+  Mail,
+  Map,
+  Menu,
   RotateCcw,
   Save,
   Settings,
   Shield,
+  Skull,
   Sparkles,
+  Store,
   Swords,
   Trophy,
   Users,
   Vibrate,
   Volume2,
   VolumeX,
+  X,
   Zap,
 } from "lucide-react";
-import { BOSS_POWER_BY_ID, HEROES, MIN_PRESTIGE_STAGE, MONSTERS_PER_STAGE, PRESTIGE_UPGRADES, SKILLS } from "./game/balance";
+import {
+  BOSS_POWER_BY_ID,
+  HEROES,
+  MIN_PRESTIGE_STAGE,
+  MONSTERS_PER_STAGE,
+  OFFLINE_CAP_SECONDS,
+  PRESTIGE_UPGRADES,
+  SKILLS,
+} from "./game/balance";
 import { emitFeedback } from "./game/feedback";
 import {
   getBossTimeLimitMs,
   getHeroDps,
   getHeroMilestone,
   getHeroUpgradeCost,
+  getOfflineReward,
   getPermanentDamageMultiplier,
   getPlayerUpgradeCost,
   getPrestigeUpgradeBonus,
@@ -72,6 +90,8 @@ import battleCrystalGrove from "./assets/battle-grove-prepared.png";
 import battleLava from "./assets/battle-lava-prepared.png";
 
 type TabId = "player" | "heroes" | "skills" | "prestige" | "settings";
+type FeatureId = "world" | "dungeon" | "battle" | "upgrades" | "achievements";
+type QuickPanelId = "shop" | "mail" | "menu";
 
 interface FloatingHit {
   id: number;
@@ -91,6 +111,14 @@ const tabs: Array<{ id: TabId; label: string; Icon: typeof Swords }> = [
   { id: "settings", label: "Settings", Icon: Settings },
 ];
 
+const featureTabs: Array<{ id: FeatureId; label: string; Icon: typeof Swords }> = [
+  { id: "world", label: "World", Icon: Map },
+  { id: "dungeon", label: "Dungeon", Icon: Skull },
+  { id: "battle", label: "Battle", Icon: Swords },
+  { id: "upgrades", label: "Upgrades", Icon: ArrowUpCircle },
+  { id: "achievements", label: "Achievements", Icon: Award },
+];
+
 const DRAG_TAP_DISTANCE_PX = 24;
 const MAX_DRAG_TAPS_PER_MOVE = 10;
 const DRAG_UPGRADE_DISTANCE_PX = 18;
@@ -99,11 +127,11 @@ const BASE_HERO_ATTACK_DURATION_MS = 1120;
 const MIN_HERO_ATTACK_DURATION_MS = 620;
 
 const heroSpawnSlots: Record<HeroId, { x: number; y: number }> = {
-  ember_squire: { x: 18, y: 86 },
-  rune_archer: { x: 73, y: 57 },
-  void_priest: { x: 32, y: 85 },
-  iron_warden: { x: 66, y: 86 },
-  star_hexer: { x: 13, y: 59 },
+  ember_squire: { x: 21, y: 86 },
+  rune_archer: { x: 75, y: 64 },
+  void_priest: { x: 40, y: 88 },
+  iron_warden: { x: 70, y: 87 },
+  star_hexer: { x: 10, y: 65 },
 };
 
 const heroMotionFramesById: Record<HeroId, string[]> = {
@@ -379,7 +407,7 @@ function MonsterSprite({
 }) {
   return (
     <img
-      className={`${styles.monsterSprite} ${isBoss ? styles.bossSprite : ""}`}
+      className={`${styles.monsterSprite} ${styles[`monsterSprite_${variant}`]} ${isBoss ? styles.bossSprite : ""}`}
       src={monsterSpriteByVariant[variant]}
       alt={isBoss ? "Boss monster" : "Monster"}
       draggable={false}
@@ -387,25 +415,173 @@ function MonsterSprite({
   );
 }
 
-function TopBar() {
+function TopBar({
+  onOpenPanel,
+}: {
+  onOpenPanel: (panel: QuickPanelId) => void;
+}) {
   const snapshot = useGameStore();
   const now = Date.now();
   const tapDamage = getTapDamage(snapshot, now);
   const totalDps = getTotalDps(snapshot, now);
+  const offlineGold = getOfflineReward(snapshot, OFFLINE_CAP_SECONDS, now);
 
   return (
     <header className={styles.topBar}>
+      <div className={styles.stageBadge}>
+        <span>Stage</span>
+        <strong data-testid="stage-display">{snapshot.stage}</strong>
+      </div>
       <div className={styles.mainStat} data-testid="gold-display">
-        <HandCoins size={18} />
-        <span>{formatNumber(snapshot.gold)}</span>
+        <HandCoins size={26} />
+        <div>
+          <span>{formatNumber(snapshot.gold)}</span>
+          <small>+{formatNumber(offlineGold)} / 6h</small>
+        </div>
       </div>
-      <div className={styles.statGrid}>
-        <span data-testid="stage-display">Stage {snapshot.stage}</span>
-        <span data-testid="dps-display">DPS {formatNumber(totalDps)}</span>
-        <span data-testid="tap-display">Tap {formatNumber(tapDamage)}</span>
-        <span data-testid="best-stage-display">Best {snapshot.highestStage}</span>
+      <div className={styles.hudMetric} data-testid="dps-display">
+        <Swords size={22} />
+        <strong>{formatNumber(totalDps)}</strong>
+        <span>DPS</span>
       </div>
+      <div className={styles.hudMetric} data-testid="tap-display">
+        <Zap size={22} />
+        <strong>{formatNumber(tapDamage)}</strong>
+        <span>Tap</span>
+      </div>
+      <button className={styles.hudAction} type="button" onClick={() => onOpenPanel("shop")}>
+        <Store size={22} />
+        <span>Shop</span>
+      </button>
+      <button className={styles.hudAction} type="button" onClick={() => onOpenPanel("mail")}>
+        <Mail size={22} />
+        <span>Mail</span>
+      </button>
+      <button className={styles.hudAction} type="button" onClick={() => onOpenPanel("menu")}>
+        <Menu size={24} />
+        <span>Menu</span>
+      </button>
     </header>
+  );
+}
+
+function QuickPanel({
+  panel,
+  onClose,
+  onSelectFeature,
+  onSelectTab,
+}: {
+  panel: QuickPanelId | null;
+  onClose: () => void;
+  onSelectFeature: (feature: FeatureId) => void;
+  onSelectTab: (tab: TabId) => void;
+}) {
+  const snapshot = useGameStore();
+  const manualSave = useGameStore((state) => state.manualSave);
+  const updateSettings = useGameStore((state) => state.updateSettings);
+  const now = Date.now();
+
+  if (!panel) {
+    return null;
+  }
+
+  function go(feature: FeatureId, tab?: TabId) {
+    onSelectFeature(feature);
+    if (tab) {
+      onSelectTab(tab);
+    }
+    onClose();
+  }
+
+  const content = {
+    shop: {
+      title: "Shop",
+      Icon: Store,
+      body: (
+        <>
+          <button className={styles.drawerAction} type="button" onClick={() => go("battle", "player")}>
+            <Swords size={18} />
+            Player strike upgrades
+          </button>
+          <button className={styles.drawerAction} type="button" onClick={() => go("battle", "heroes")}>
+            <Users size={18} />
+            Hero roster upgrades
+          </button>
+          <button className={styles.drawerAction} type="button" onClick={() => go("battle", "skills")}>
+            <Sparkles size={18} />
+            Skill training
+          </button>
+        </>
+      ),
+      footer: snapshot.settings.developerMode ? "Developer mode: upgrade costs are 0." : "Spend gold earned in battle.",
+    },
+    mail: {
+      title: "Mail",
+      Icon: Mail,
+      body: (
+        <>
+          <article className={styles.drawerNote}>
+            <strong>Offline Chest</strong>
+            <span>6h estimate +{formatNumber(getOfflineReward(snapshot, OFFLINE_CAP_SECONDS, now))} gold</span>
+          </article>
+          <article className={styles.drawerNote}>
+            <strong>Run Report</strong>
+            <span>
+              {formatNumber(snapshot.totalKills)} kills / {formatNumber(snapshot.totalTaps)} taps
+            </span>
+          </article>
+        </>
+      ),
+      footer: "Rewards are applied automatically when an offline report appears.",
+    },
+    menu: {
+      title: "Menu",
+      Icon: Menu,
+      body: (
+        <>
+          <button
+            className={styles.drawerAction}
+            type="button"
+            onClick={() => {
+              manualSave();
+              onClose();
+            }}
+          >
+            <Save size={18} />
+            Save now
+          </button>
+          <button className={styles.drawerAction} type="button" onClick={() => go("battle", "settings")}>
+            <Settings size={18} />
+            Settings
+          </button>
+          <button
+            className={styles.drawerAction}
+            type="button"
+            onClick={() => updateSettings({ developerMode: !snapshot.settings.developerMode })}
+          >
+            <Zap size={18} />
+            {snapshot.settings.developerMode ? "Developer mode on" : "Developer mode off"}
+          </button>
+        </>
+      ),
+      footer: `Best stage ${formatNumber(snapshot.highestStage)}.`,
+    },
+  } satisfies Record<QuickPanelId, { title: string; Icon: typeof Swords; body: JSX.Element; footer: string }>;
+
+  const { title, Icon, body, footer } = content[panel];
+
+  return (
+    <div className={styles.quickPanel} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={styles.quickPanelHeader}>
+        <Icon size={21} />
+        <strong>{title}</strong>
+        <button className={styles.closeButton} type="button" onClick={onClose} aria-label="Close">
+          <X size={18} />
+        </button>
+      </div>
+      <div className={styles.quickPanelBody}>{body}</div>
+      <p>{footer}</p>
+    </div>
   );
 }
 
@@ -663,10 +839,13 @@ function Arena() {
 function PlayerTab() {
   const snapshot = useGameStore();
   const upgradePlayer = useGameStore((state) => state.upgradePlayer);
+  const prestige = useGameStore((state) => state.prestige);
   const now = Date.now();
   const cost = getPlayerUpgradeCost(snapshot.playerLevel);
   const displayedCost = snapshot.settings.developerMode ? 0 : cost;
   const tapDamage = getTapDamage(snapshot, now);
+  const prestigeReward = getPrestigeReward(snapshot.highestStage);
+  const canPrestige = snapshot.highestStage >= MIN_PRESTIGE_STAGE && prestigeReward > 0;
 
   function handleUpgradePlayer() {
     const upgraded = upgradePlayer();
@@ -674,6 +853,12 @@ function PlayerTab() {
       emitFeedback("upgrade", snapshot.settings);
     }
     return upgraded;
+  }
+
+  function handlePrestige() {
+    if (prestige()) {
+      emitFeedback("prestige", snapshot.settings);
+    }
   }
 
   return (
@@ -697,6 +882,16 @@ function PlayerTab() {
       <article className={styles.infoCard}>
         <strong>Prestige Bonus</strong>
         <span>Permanent damage x{getPermanentDamageMultiplier(snapshot).toFixed(2)}</span>
+        <button
+          className={styles.prestigeInlineButton}
+          type="button"
+          disabled={!canPrestige}
+          onClick={handlePrestige}
+          data-testid="prestige-inline"
+        >
+          <Crown size={17} />
+          Prestige +{formatNumber(prestigeReward)}
+        </button>
       </article>
     </div>
   );
@@ -1007,8 +1202,191 @@ function SettingsTab() {
   );
 }
 
-function UpgradePanel() {
-  const [activeTab, setActiveTab] = useState<TabId>("player");
+function WorldPanel() {
+  const snapshot = useGameStore();
+  const areaNames = ["Crystal Cavern", "Ember Ruins", "Mire Grove"];
+  const areaName = areaNames[Math.max(0, snapshot.stage - 1) % areaNames.length];
+  const progress = Math.round(getStageProgress(snapshot) * 100);
+
+  return (
+    <div className={styles.featureContent}>
+      <article className={styles.featureHeroCard}>
+        <Map size={34} />
+        <div>
+          <p className={styles.eyebrow}>Current Region</p>
+          <h2>{areaName}</h2>
+          <span>
+            Stage {snapshot.stage} / Best {snapshot.highestStage}
+          </span>
+        </div>
+      </article>
+      <article className={styles.infoCard}>
+        <strong>Stage Route</strong>
+        <span>
+          {Math.min(snapshot.killsInStage, MONSTERS_PER_STAGE)}/{MONSTERS_PER_STAGE} cleared before the next advance.
+        </span>
+        <div className={styles.featureMeter}>
+          <span style={{ width: `${progress}%` }} />
+        </div>
+      </article>
+    </div>
+  );
+}
+
+function DungeonPanel() {
+  const snapshot = useGameStore();
+  const now = Date.now();
+  const nextBossStage = Math.max(5, Math.ceil(snapshot.stage / 5) * 5);
+  const bossPower = snapshot.monster.bossPower ? BOSS_POWER_BY_ID[snapshot.monster.bossPower] : null;
+  const bossRemaining = getBossTimeRemaining(snapshot, now);
+
+  return (
+    <div className={styles.featureContent}>
+      <article className={styles.featureHeroCard}>
+        <Skull size={34} />
+        <div>
+          <p className={styles.eyebrow}>Dungeon Gate</p>
+          <h2>{snapshot.monster.isBoss ? snapshot.monster.name : `Boss Stage ${nextBossStage}`}</h2>
+          <span>
+            {snapshot.monster.isBoss
+              ? `${formatSeconds(bossRemaining)} remaining`
+              : `${Math.max(0, nextBossStage - snapshot.stage)} stages away`}
+          </span>
+        </div>
+      </article>
+      <article className={styles.infoCard}>
+        <strong>{bossPower ? bossPower.name : "Boss Pattern"}</strong>
+        <span>{bossPower ? bossPower.role : "Every 5th stage becomes a timed boss fight."}</span>
+      </article>
+    </div>
+  );
+}
+
+function BattlePanel() {
+  const snapshot = useGameStore();
+  const now = Date.now();
+  const activeHeroCount = HEROES.filter((hero) => snapshot.heroLevels[hero.id] > 0).length;
+
+  return (
+    <div className={styles.featureContent}>
+      <article className={styles.featureHeroCard}>
+        <Swords size={34} />
+        <div>
+          <p className={styles.eyebrow}>Battle Report</p>
+          <h2>{snapshot.monster.name}</h2>
+          <span>
+            HP {formatNumber(snapshot.monster.hp)} / {formatNumber(snapshot.monster.maxHp)}
+          </span>
+        </div>
+      </article>
+      <div className={styles.featureGrid}>
+        <article className={styles.infoCard}>
+          <strong>{formatNumber(getTapDamage(snapshot, now))}</strong>
+          <span>Tap damage</span>
+        </article>
+        <article className={styles.infoCard}>
+          <strong>{formatNumber(getTotalDps(snapshot, now))}</strong>
+          <span>DPS / {activeHeroCount} heroes active</span>
+        </article>
+      </div>
+    </div>
+  );
+}
+
+function UpgradePlannerPanel({
+  onSelectTab,
+  onSelectFeature,
+}: {
+  onSelectTab: (tab: TabId) => void;
+  onSelectFeature: (feature: FeatureId) => void;
+}) {
+  const snapshot = useGameStore();
+  const freeUpgrades = snapshot.settings.developerMode;
+  const playerCost = freeUpgrades ? 0 : getPlayerUpgradeCost(snapshot.playerLevel);
+  const nextHero = HEROES.find((hero) => snapshot.highestStage >= hero.unlockStage && snapshot.heroLevels[hero.id] === 0);
+  const nextSkill = SKILLS.find((skill) => snapshot.highestStage >= skill.unlockStage && snapshot.skillState[skill.id].level === 0);
+
+  function jump(tab: TabId) {
+    onSelectFeature("battle");
+    onSelectTab(tab);
+  }
+
+  return (
+    <div className={styles.featureContent}>
+      <article className={styles.featureHeroCard}>
+        <ArrowUpCircle size={34} />
+        <div>
+          <p className={styles.eyebrow}>Upgrade Planner</p>
+          <h2>{freeUpgrades ? "Free upgrade testing" : "Spend route"}</h2>
+          <span>Player next cost {formatNumber(playerCost)}</span>
+        </div>
+      </article>
+      <div className={styles.drawerActionGrid}>
+        <button className={styles.drawerAction} type="button" onClick={() => jump("player")}>
+          <Swords size={18} />
+          Player
+        </button>
+        <button className={styles.drawerAction} type="button" onClick={() => jump("heroes")}>
+          <Users size={18} />
+          {nextHero ? nextHero.name : "Heroes"}
+        </button>
+        <button className={styles.drawerAction} type="button" onClick={() => jump("skills")}>
+          <Sparkles size={18} />
+          {nextSkill ? nextSkill.name : "Skills"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AchievementsPanel() {
+  const snapshot = useGameStore();
+  const achievements = [
+    { label: "Kills", value: snapshot.totalKills, target: 100 },
+    { label: "Taps", value: snapshot.totalTaps, target: 1000 },
+    { label: "Best Stage", value: snapshot.highestStage, target: MIN_PRESTIGE_STAGE },
+    { label: "Prestige", value: snapshot.prestigeCount, target: 1 },
+  ];
+
+  return (
+    <div className={styles.featureContent}>
+      <article className={styles.featureHeroCard}>
+        <Crown size={34} />
+        <div>
+          <p className={styles.eyebrow}>Achievements</p>
+          <h2>Run trophies</h2>
+          <span>Progress updates as you play.</span>
+        </div>
+      </article>
+      {achievements.map((achievement) => {
+        const progress = Math.min(1, achievement.value / achievement.target);
+        return (
+          <article className={styles.infoCard} key={achievement.label}>
+            <strong>{achievement.label}</strong>
+            <span>
+              {formatNumber(achievement.value)} / {formatNumber(achievement.target)}
+            </span>
+            <div className={styles.featureMeter}>
+              <span style={{ width: `${progress * 100}%` }} />
+            </div>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function UpgradePanel({
+  activeTab,
+  setActiveTab,
+  activeFeature,
+  setActiveFeature,
+}: {
+  activeTab: TabId;
+  setActiveTab: (tab: TabId) => void;
+  activeFeature: FeatureId;
+  setActiveFeature: (feature: FeatureId) => void;
+}) {
   const content = {
     player: <PlayerTab />,
     heroes: <HeroesTab />,
@@ -1017,25 +1395,53 @@ function UpgradePanel() {
     settings: <SettingsTab />,
   } satisfies Record<TabId, JSX.Element>;
 
+  const featureContent = {
+    world: <WorldPanel />,
+    dungeon: <DungeonPanel />,
+    battle: (
+      <>
+        <nav className={styles.tabBar} aria-label="Upgrade tabs">
+          {tabs.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              className={`${styles.tabButton} ${activeTab === id ? styles.tabActive : ""}`}
+              type="button"
+              onClick={() => setActiveTab(id)}
+              data-testid={`tab-${id}`}
+              title={label}
+              aria-label={label}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
+        {content[activeTab]}
+      </>
+    ),
+    upgrades: <UpgradePlannerPanel onSelectTab={setActiveTab} onSelectFeature={setActiveFeature} />,
+    achievements: <AchievementsPanel />,
+  } satisfies Record<FeatureId, JSX.Element>;
+
   return (
     <section className={styles.upgradePanel}>
-      <nav className={styles.tabBar} aria-label="Upgrade tabs">
-        {tabs.map(({ id, label, Icon }) => (
+      <div className={styles.panelViewport}>{featureContent[activeFeature]}</div>
+      <nav className={styles.featureNav} aria-label="Main sections">
+        {featureTabs.map(({ id, label, Icon }) => (
           <button
             key={id}
-            className={`${styles.tabButton} ${activeTab === id ? styles.tabActive : ""}`}
+            className={`${styles.featureButton} ${activeFeature === id ? styles.featureActive : ""}`}
             type="button"
-            onClick={() => setActiveTab(id)}
-            data-testid={`tab-${id}`}
+            onClick={() => setActiveFeature(id)}
+            data-testid={`feature-${id}`}
             title={label}
             aria-label={label}
           >
-            <Icon size={18} />
+            <Icon size={22} />
             <span>{label}</span>
           </button>
         ))}
       </nav>
-      {content[activeTab]}
     </section>
   );
 }
@@ -1060,6 +1466,9 @@ function OfflineRewardToast() {
 
 export default function App() {
   useGameLoop();
+  const [activeTab, setActiveTab] = useState<TabId>("player");
+  const [activeFeature, setActiveFeature] = useState<FeatureId>("battle");
+  const [quickPanel, setQuickPanel] = useState<QuickPanelId | null>(null);
 
   return (
     <div className={styles.appShell}>
@@ -1069,12 +1478,23 @@ export default function App() {
         <span />
       </div>
       <div className={styles.gameFrame}>
-        <TopBar />
+        <TopBar onOpenPanel={setQuickPanel} />
+        <QuickPanel
+          panel={quickPanel}
+          onClose={() => setQuickPanel(null)}
+          onSelectFeature={setActiveFeature}
+          onSelectTab={setActiveTab}
+        />
         <div className={styles.offlineSlot}>
           <OfflineRewardToast />
         </div>
         <Arena />
-        <UpgradePanel />
+        <UpgradePanel
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          activeFeature={activeFeature}
+          setActiveFeature={setActiveFeature}
+        />
       </div>
     </div>
   );
